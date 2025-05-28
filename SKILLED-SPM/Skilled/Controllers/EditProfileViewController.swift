@@ -332,11 +332,16 @@ class EditProfileViewController: UIViewController {
         
         // Load profile image if available
         if let imageUrl = user.profileImageUrl, let url = URL(string: imageUrl) {
-            // In a real app, use a proper image loading library like Kingfisher or SDWebImage
-            // For now, just show the placeholder
-            profileImageView.image = UIImage(systemName: "person.circle.fill")
+            URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+                if let data = data, let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        self?.profileImageView.image = image
+                    }
+                }
+            }.resume()
         }
     }
+
     
     // MARK: - Actions
     @objc private func dismissKeyboard() {
@@ -439,15 +444,8 @@ class EditProfileViewController: UIViewController {
         
         // If there's a selected image, upload it first
         if let selectedImage = selectedImage {
-            // Show uploading status
-            let alert = UIAlertController(title: "Uploading", message: "Uploading profile image...", preferredStyle: .alert)
-            present(alert, animated: true)
-            
             uploadProfileImage(selectedImage) { [weak self] imageUrl in
                 guard let self = self else { return }
-                
-                // Dismiss the uploading alert
-                alert.dismiss(animated: true)
                 
                 if let imageUrl = imageUrl {
                     updatedUser.profileImageUrl = imageUrl
@@ -464,50 +462,21 @@ class EditProfileViewController: UIViewController {
     }
     
     private func uploadProfileImage(_ image: UIImage, completion: @escaping (String?) -> Void) {
-        guard let imageData = image.jpegData(compressionQuality: 0.5),
-              let userId = Auth.auth().currentUser?.uid else {
-            print("Error: Failed to get image data or user ID")
-            completion(nil)
-            return
+        // Store the image in UserDefaults for immediate access
+        if let imageData = image.jpegData(compressionQuality: 0.5) {
+            UserDefaults.standard.set(imageData, forKey: "profileImage")
         }
         
-        // Use a simpler path with just the user ID
-        let storageRef = Storage.storage().reference()
-        let imageRef = storageRef.child("profile_images/\(userId).jpg")
-        
-        // Create metadata
-        let metadata = StorageMetadata()
-        metadata.contentType = "image/jpeg"
-        
-        // Upload the file with completion handler
-        print("Starting image upload...")
-        imageRef.putData(imageData, metadata: metadata) { metadata, error in
-            if let error = error {
-                print("Error uploading image: \(error.localizedDescription)")
-                completion(nil)
-                return
-            }
-            
-            // Important: Wait a moment before requesting the download URL
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                imageRef.downloadURL { url, error in
-                    if let error = error {
-                        print("Error getting download URL: \(error.localizedDescription)")
-                        completion(nil)
-                        return
-                    }
-                    
-                    if let downloadURL = url {
-                        print("Image uploaded successfully. URL: \(downloadURL.absoluteString)")
-                        completion(downloadURL.absoluteString)
-                    } else {
-                        print("Error: Download URL is nil")
-                        completion(nil)
-                    }
-                }
-            }
+        // Use a data URL scheme to embed the image directly
+        if let imageData = image.jpegData(compressionQuality: 0.5) {
+            let base64String = imageData.base64EncodedString()
+            let dataURL = "data:image/jpeg;base64," + base64String
+            completion(dataURL)
+        } else {
+            completion(nil)
         }
     }
+
     
     private func saveUserData(_ user: User) {
         let db = Firestore.firestore()

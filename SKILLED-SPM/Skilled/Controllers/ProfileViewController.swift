@@ -231,11 +231,16 @@ class ProfileViewController: UIViewController {
         
         // Load profile image if available
         if let imageUrl = user.profileImageUrl, let url = URL(string: imageUrl) {
-            // In a real app, use a proper image loading library like Kingfisher or SDWebImage
-            // For now, just show the placeholder
-            profileImageView.image = UIImage(systemName: "person.circle.fill")
+            URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+                if let data = data, let image = UIImage(data: data) {
+                    DispatchQueue.main.async {
+                        self?.profileImageView.image = image
+                    }
+                }
+            }.resume()
         }
     }
+
     
     // MARK: - Actions
     @objc private func editProfileTapped() {
