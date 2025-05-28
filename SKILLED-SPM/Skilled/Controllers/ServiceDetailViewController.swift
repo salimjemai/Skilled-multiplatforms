@@ -399,7 +399,27 @@ class ServiceDetailViewController: UIViewController {
     // MARK: - Action Methods
     @objc private func bookNowButtonTapped() {
         let bookingVC = BookingViewController()
-        bookingVC.serviceProvider = serviceProvider
+        // Convert ServiceProvider to User for BookingViewController
+        if let provider = serviceProvider {
+            let user = User(
+                id: provider.id,
+                firstName: "Provider", // Use default values since ServiceProvider doesn't have these fields
+                lastName: provider.businessName,
+                email: provider.email,
+                phoneNumber: provider.phoneNumber,
+                profileImageUrl: provider.profileImageUrl,
+                role: .provider,
+                location: provider.location,
+                isVerified: provider.isVerified,
+                createdAt: provider.createdAt,
+                updatedAt: provider.updatedAt,
+                businessName: provider.businessName,
+                businessDescription: provider.description,
+                yearsOfExperience: provider.yearsOfExperience,
+                servicesOffered: provider.tradeCategories
+            )
+            bookingVC.provider = user
+        }
         navigationController?.pushViewController(bookingVC, animated: true)
     }
 }
@@ -423,8 +443,32 @@ extension ServiceDetailViewController: UICollectionViewDelegate, UICollectionVie
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let service = mockServices[indexPath.item]
         let bookingVC = BookingViewController()
-        bookingVC.serviceProvider = serviceProvider
-        bookingVC.selectedService = service
+        
+        // Convert ServiceProvider to User for BookingViewController
+        if let provider = serviceProvider {
+            let user = User(
+                id: provider.id,
+                firstName: "Provider", // Use default values since ServiceProvider doesn't have these fields
+                lastName: provider.businessName,
+                email: provider.email,
+                phoneNumber: provider.phoneNumber,
+                profileImageUrl: provider.profileImageUrl,
+                role: .provider,
+                location: provider.location,
+                isVerified: provider.isVerified,
+                createdAt: provider.createdAt,
+                updatedAt: provider.updatedAt,
+                businessName: provider.businessName,
+                businessDescription: provider.description,
+                yearsOfExperience: provider.yearsOfExperience,
+                servicesOffered: provider.tradeCategories
+            )
+            bookingVC.provider = user
+        }
+        
+        // Set the selected service
+        bookingVC.service = service
+        
         navigationController?.pushViewController(bookingVC, animated: true)
     }
 }

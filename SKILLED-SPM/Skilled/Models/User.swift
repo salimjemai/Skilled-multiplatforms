@@ -20,6 +20,15 @@ struct User: Codable {
     var createdAt: Date
     var updatedAt: Date
     
+    // Provider-specific properties
+    var businessName: String?
+    var businessDescription: String?
+    var yearsOfExperience: Int?
+    var servicesOffered: [String]?
+    var ratings: Double?
+    var reviewCount: Int?
+    var isAvailableForHire: Bool?
+    
     // Default memberwise initializer
     init(id: String, 
          firstName: String, 
@@ -31,7 +40,14 @@ struct User: Codable {
          location: Location? = nil, 
          isVerified: Bool, 
          createdAt: Date, 
-         updatedAt: Date) {
+         updatedAt: Date,
+         businessName: String? = nil,
+         businessDescription: String? = nil,
+         yearsOfExperience: Int? = nil,
+         servicesOffered: [String]? = nil,
+         ratings: Double? = nil,
+         reviewCount: Int? = nil,
+         isAvailableForHire: Bool? = nil) {
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
@@ -43,6 +59,15 @@ struct User: Codable {
         self.isVerified = isVerified
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        
+        // Initialize provider-specific properties
+        self.businessName = businessName
+        self.businessDescription = businessDescription
+        self.yearsOfExperience = yearsOfExperience
+        self.servicesOffered = servicesOffered
+        self.ratings = ratings
+        self.reviewCount = reviewCount
+        self.isAvailableForHire = isAvailableForHire
     }
     
     var fullName: String {
@@ -76,6 +101,37 @@ struct User: Codable {
                 "longitude": location.longitude,
                 "address": location.address
             ]
+        }
+        
+        // Add provider-specific properties if they exist
+        if role == .provider {
+            if let businessName = businessName {
+                dict["businessName"] = businessName
+            }
+            
+            if let businessDescription = businessDescription {
+                dict["businessDescription"] = businessDescription
+            }
+            
+            if let yearsOfExperience = yearsOfExperience {
+                dict["yearsOfExperience"] = yearsOfExperience
+            }
+            
+            if let servicesOffered = servicesOffered {
+                dict["servicesOffered"] = servicesOffered
+            }
+            
+            if let ratings = ratings {
+                dict["ratings"] = ratings
+            }
+            
+            if let reviewCount = reviewCount {
+                dict["reviewCount"] = reviewCount
+            }
+            
+            if let isAvailableForHire = isAvailableForHire {
+                dict["isAvailableForHire"] = isAvailableForHire
+            }
         }
         
         return dict
@@ -123,6 +179,17 @@ struct User: Codable {
         self.isVerified = isVerified
         self.createdAt = createdDate
         self.updatedAt = updatedDate
+        
+        // Initialize provider-specific properties if the user is a provider
+        if role == .provider {
+            self.businessName = dictionary["businessName"] as? String
+            self.businessDescription = dictionary["businessDescription"] as? String
+            self.yearsOfExperience = dictionary["yearsOfExperience"] as? Int
+            self.servicesOffered = dictionary["servicesOffered"] as? [String]
+            self.ratings = dictionary["ratings"] as? Double
+            self.reviewCount = dictionary["reviewCount"] as? Int
+            self.isAvailableForHire = dictionary["isAvailableForHire"] as? Bool
+        }
         
         if let locationDict = dictionary["location"] as? [String: Any],
            let latitude = locationDict["latitude"] as? Double,

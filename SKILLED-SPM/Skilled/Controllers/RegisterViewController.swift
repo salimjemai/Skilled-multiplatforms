@@ -19,6 +19,10 @@ class RegisterViewController: UIViewController {
     // Apple Sign-In state
     private var currentNonce: String?
     
+    // Service categories for picker
+    private let serviceCategories = TradeCategory.allCases
+    private var selectedServiceCategory: TradeCategory = .handyman // Default
+    
     // MARK: - UI Components
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -66,6 +70,30 @@ class RegisterViewController: UIViewController {
         return textField
     }()
     
+    private let userTypeSegmentedControl: UISegmentedControl = {
+        let items = ["Client", "Service Provider"]
+        let segmentedControl = UISegmentedControl(items: items)
+        segmentedControl.selectedSegmentIndex = 0 // Default to Client
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        return segmentedControl
+    }()
+    
+    private let serviceTypeLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Select Service Type:"
+        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true // Hidden by default
+        return label
+    }()
+    
+    private let serviceTypePicker: UIPickerView = {
+        let picker = UIPickerView()
+        picker.translatesAutoresizingMaskIntoConstraints = false
+        picker.isHidden = true // Hidden by default
+        return picker
+    }()
+    
     private let registerButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Sign Up", for: .normal)
@@ -91,6 +119,9 @@ class RegisterViewController: UIViewController {
         stackView.spacing = 10
         stackView.alignment = .fill
         stackView.distribution = .fillEqually
+        stackView.backgroundColor = .clear
+        stackView.isLayoutMarginsRelativeArrangement = true
+        stackView.layoutMargins = UIEdgeInsets(top: 5, left: 0, bottom: 5, right: 0)
         stackView.translatesAutoresizingMaskIntoConstraints = false
         return stackView
     }()
@@ -110,6 +141,10 @@ class RegisterViewController: UIViewController {
         label.textAlignment = .center
         label.backgroundColor = .systemBackground
         label.translatesAutoresizingMaskIntoConstraints = false
+        // Add padding around the text
+        label.layer.cornerRadius = 8
+        label.clipsToBounds = true
+        label.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
         return label
     }()
     
@@ -124,11 +159,16 @@ class RegisterViewController: UIViewController {
         button.tintColor = .white
         button.layer.cornerRadius = 10
         button.contentHorizontalAlignment = .center
+        button.heightAnchor.constraint(equalToConstant: 50).isActive = true
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
     
     // MARK: - Lifecycle
+    // Store constraints that need to be activated/deactivated
+    private var clientLayoutConstraints: [NSLayoutConstraint] = []
+    private var providerLayoutConstraints: [NSLayoutConstraint] = []
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -136,69 +176,132 @@ class RegisterViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupUI()
         setupActions()
+        
+        // Set up dynamic constraints
+        setupDynamicConstraints()
+        
+        // Initial layout based on default selection
+        userTypeChanged()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // Add padding to the OR label
+        let padding: CGFloat = 8
+        orLabel.frame = CGRect(
+            x: orLabel.frame.origin.x - padding,
+            y: orLabel.frame.origin.y - padding/2,
+            width: orLabel.frame.width + padding*2,
+            height: orLabel.frame.height + padding
+        )
     }
     
     // MARK: - UI Setup
     private func setupUI() {
-        view.addSubview(titleLabel)
-        view.addSubview(nameTextField)
-        view.addSubview(emailTextField)
-        view.addSubview(passwordTextField)
-        view.addSubview(confirmPasswordTextField)
-        view.addSubview(registerButton)
-        view.addSubview(activityIndicator)
-        view.addSubview(socialButtonsStackView)
-        view.addSubview(dividerView)
-        view.addSubview(orLabel)
+        // Create a scroll view to contain everything
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        
+        // Create a content view for the scroll view
+        let contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentView)
+        
+        // Set up scroll view constraints
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
+        ])
+        
+        // Add all UI elements to the content view
+        contentView.addSubview(titleLabel)
+        contentView.addSubview(nameTextField)
+        contentView.addSubview(emailTextField)
+        contentView.addSubview(passwordTextField)
+        contentView.addSubview(confirmPasswordTextField)
+        contentView.addSubview(userTypeSegmentedControl)
+        contentView.addSubview(serviceTypeLabel)
+        contentView.addSubview(serviceTypePicker)
+        contentView.addSubview(registerButton)
+        contentView.addSubview(activityIndicator)
+        contentView.addSubview(dividerView)
+        contentView.addSubview(orLabel)
+        contentView.addSubview(socialButtonsStackView)
         
         // Add social sign-in buttons to stack view
         socialButtonsStackView.addArrangedSubview(appleSignInButton)
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 40),
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
             nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 40),
-            nameTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            nameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            nameTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            nameTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             nameTextField.heightAnchor.constraint(equalToConstant: 50),
             
             emailTextField.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 15),
-            emailTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            emailTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            emailTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            emailTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             emailTextField.heightAnchor.constraint(equalToConstant: 50),
             
             passwordTextField.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 15),
-            passwordTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            passwordTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            passwordTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            passwordTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             passwordTextField.heightAnchor.constraint(equalToConstant: 50),
             
             confirmPasswordTextField.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 15),
-            confirmPasswordTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            confirmPasswordTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            confirmPasswordTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            confirmPasswordTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             confirmPasswordTextField.heightAnchor.constraint(equalToConstant: 50),
             
-            registerButton.topAnchor.constraint(equalTo: confirmPasswordTextField.bottomAnchor, constant: 30),
-            registerButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            registerButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            userTypeSegmentedControl.topAnchor.constraint(equalTo: confirmPasswordTextField.bottomAnchor, constant: 15),
+            userTypeSegmentedControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            userTypeSegmentedControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            userTypeSegmentedControl.heightAnchor.constraint(equalToConstant: 40),
+            
+            serviceTypeLabel.topAnchor.constraint(equalTo: userTypeSegmentedControl.bottomAnchor, constant: 15),
+            serviceTypeLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            serviceTypeLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            
+            serviceTypePicker.topAnchor.constraint(equalTo: serviceTypeLabel.bottomAnchor, constant: 5),
+            serviceTypePicker.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            serviceTypePicker.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            serviceTypePicker.heightAnchor.constraint(equalToConstant: 120),
+            
+            // Dynamic constraint will be set in userTypeChanged method
+            registerButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            registerButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             registerButton.heightAnchor.constraint(equalToConstant: 50),
             
-            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             activityIndicator.topAnchor.constraint(equalTo: registerButton.bottomAnchor, constant: 20),
             
             // Constraints for social sign-in UI components
-            socialButtonsStackView.topAnchor.constraint(equalTo: registerButton.bottomAnchor, constant: 40),
-            socialButtonsStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            socialButtonsStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            dividerView.topAnchor.constraint(equalTo: socialButtonsStackView.bottomAnchor, constant: 20),
-            dividerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            dividerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            dividerView.topAnchor.constraint(equalTo: registerButton.bottomAnchor, constant: 40),
+            dividerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            dividerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             dividerView.heightAnchor.constraint(equalToConstant: 1),
             
-            orLabel.topAnchor.constraint(equalTo: dividerView.bottomAnchor, constant: 10),
-            orLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            orLabel.centerYAnchor.constraint(equalTo: dividerView.centerYAnchor),
+            orLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            
+            socialButtonsStackView.topAnchor.constraint(equalTo: dividerView.bottomAnchor, constant: 30),
+            socialButtonsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            socialButtonsStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            socialButtonsStackView.heightAnchor.constraint(equalToConstant: 50),
+            socialButtonsStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
         ])
     }
     
@@ -208,9 +311,58 @@ class RegisterViewController: UIViewController {
         // Add target actions for social sign-in buttons
         appleSignInButton.addTarget(self, action: #selector(appleSignInTapped), for: .touchUpInside)
         
+        // Set up service type picker
+        serviceTypePicker.delegate = self
+        serviceTypePicker.dataSource = self
+        
+        // Add action for user type segmented control
+        userTypeSegmentedControl.addTarget(self, action: #selector(userTypeChanged), for: .valueChanged)
+        
         // Add tap gesture to dismiss keyboard
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         view.addGestureRecognizer(tapGesture)
+    }
+    
+    // Setup dynamic constraints that will be activated/deactivated based on user type
+    private func setupDynamicConstraints() {
+        // Client layout constraints
+        clientLayoutConstraints = [
+            registerButton.topAnchor.constraint(equalTo: userTypeSegmentedControl.bottomAnchor, constant: 30),
+            dividerView.topAnchor.constraint(equalTo: registerButton.bottomAnchor, constant: 40),
+            socialButtonsStackView.topAnchor.constraint(equalTo: dividerView.bottomAnchor, constant: 30)
+        ]
+        
+        // Provider layout constraints
+        providerLayoutConstraints = [
+            registerButton.topAnchor.constraint(equalTo: serviceTypePicker.bottomAnchor, constant: 15),
+            socialButtonsStackView.topAnchor.constraint(equalTo: registerButton.bottomAnchor, constant: 30)
+        ]
+    }
+    
+    @objc private func userTypeChanged() {
+        // Show/hide service type picker based on selection
+        let isServiceProvider = userTypeSegmentedControl.selectedSegmentIndex == 1
+        serviceTypeLabel.isHidden = !isServiceProvider
+        serviceTypePicker.isHidden = !isServiceProvider
+        
+        // Hide only the OR divider for service providers, keep Apple button
+        dividerView.isHidden = isServiceProvider
+        orLabel.isHidden = isServiceProvider
+        
+        // Deactivate all constraints first
+        NSLayoutConstraint.deactivate(clientLayoutConstraints)
+        NSLayoutConstraint.deactivate(providerLayoutConstraints)
+        
+        // Activate appropriate constraints
+        if isServiceProvider {
+            NSLayoutConstraint.activate(providerLayoutConstraints)
+        } else {
+            NSLayoutConstraint.activate(clientLayoutConstraints)
+        }
+        
+        // Force layout update
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
     }
     
     @objc private func dismissKeyboard() {
@@ -220,12 +372,15 @@ class RegisterViewController: UIViewController {
     @objc private func registerButtonTapped() {
         // Validate inputs
         guard let name = nameTextField.text, !name.isEmpty,
-              let email = emailTextField.text, !email.isEmpty,
+              let emailInput = emailTextField.text, !emailInput.isEmpty,
               let password = passwordTextField.text, !password.isEmpty,
               let confirmPassword = confirmPasswordTextField.text, !confirmPassword.isEmpty else {
             showAlert(title: "Error", message: "Please fill in all fields")
             return
         }
+        
+        // Normalize email to lowercase
+        let email = emailInput.lowercased()
         
         // Check if passwords match
         guard password == confirmPassword else {
@@ -262,7 +417,7 @@ class RegisterViewController: UIViewController {
             print("Attempting to create user with email: \(email)")
             // Add a delay before creating user to give Firebase Auth time to initialize fully
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                Auth.auth().createUser(withEmail: email, password: password) { [weak self] result, error in
+                Auth.auth().createUser(withEmail: email.lowercased(), password: password) { [weak self] result, error in
                     guard let self = self else { return }
                     
                     // Hide activity indicator
@@ -387,19 +542,27 @@ class RegisterViewController: UIViewController {
                     // Create current date - let Firestore handle timestamp conversion
                     let currentDate = Date()
                     
-                    let newUser = User(
+                    // Determine user role based on segmented control selection
+                    let userRole: UserRole = self.userTypeSegmentedControl.selectedSegmentIndex == 0 ? .customer : .provider
+                    
+                    var newUser = User(
                         id: uid,
                         firstName: firstName,
                         lastName: lastName,
                         email: email,
                         phoneNumber: nil,
                         profileImageUrl: nil,
-                        role: .customer, // Using .customer shorthand for clarity
+                        role: userRole,
                         location: nil,
                         isVerified: false,
                         createdAt: currentDate,
                         updatedAt: currentDate
                     )
+                    
+                    // Add service category for providers
+                    if userRole == .provider {
+                        newUser.servicesOffered = [self.selectedServiceCategory.rawValue]
+                    }
                     
                     // Save user using Firestore directly
                     let db = Firestore.firestore()
@@ -441,12 +604,14 @@ class RegisterViewController: UIViewController {
     // MARK: - Email Verification
     // Check if email already exists in Firestore
     private func checkEmailExists(_ email: String, completion: @escaping (Bool) -> Void) {
-        print("Checking if email exists before registration: \(email)")
+        // Ensure email is lowercase for consistent checking
+        let normalizedEmail = email.lowercased()
+        print("Checking if email exists before registration: \(normalizedEmail)")
         
         // Check directly in Firestore
         let db = Firestore.firestore()
         db.collection("users")
-            .whereField("email", isEqualTo: email)
+            .whereField("email", isEqualTo: normalizedEmail)
             .limit(to: 1)
             .getDocuments { snapshot, error in
                 if let error = error {
@@ -572,9 +737,10 @@ class RegisterViewController: UIViewController {
     // MARK: - Analytics Logging
     private func logRegistrationSuccess() {
         // Log successful registration with additional parameters
+        let userType = self.userTypeSegmentedControl.selectedSegmentIndex == 0 ? "customer" : "provider"
         Analytics.logEvent("registration_success", parameters: [
             "method": "email_password",
-            "user_type": "customer",
+            "user_type": userType,
             "has_profile_image": false
         ])
         
@@ -586,9 +752,10 @@ class RegisterViewController: UIViewController {
     
     private func logRegistrationSuccess(method: String) {
         // Log successful registration with additional parameters
+        let userType = self.userTypeSegmentedControl.selectedSegmentIndex == 0 ? "customer" : "provider"
         Analytics.logEvent("registration_success", parameters: [
             "method": method,
-            "user_type": "customer",
+            "user_type": userType,
             "has_profile_image": method != "email_password"
         ])
         
@@ -782,20 +949,28 @@ class RegisterViewController: UIViewController {
         // Create current date
         let currentDate = Date()
         
+        // Determine user role based on segmented control selection
+        let userRole: UserRole = self.userTypeSegmentedControl.selectedSegmentIndex == 0 ? .customer : .provider
+        
         // Create a User object
-        let newUser = User(
+        var newUser = User(
             id: user.uid,
             firstName: firstName,
             lastName: lastName,
             email: user.email ?? "",
             phoneNumber: user.phoneNumber,
             profileImageUrl: user.photoURL?.absoluteString,
-            role: .customer,
+            role: userRole,
             location: nil,
             isVerified: user.isEmailVerified,
             createdAt: currentDate,
             updatedAt: currentDate
         )
+        
+        // Add service category for providers
+        if userRole == .provider {
+            newUser.servicesOffered = [self.selectedServiceCategory.rawValue]
+        }
         
         // Save user to Firestore
         let userData = newUser.toDictionary()
@@ -914,5 +1089,24 @@ extension RegisterViewController: ASAuthorizationControllerDelegate {
 extension RegisterViewController: ASAuthorizationControllerPresentationContextProviding {
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         return view.window!
+    }
+}
+
+// MARK: - UIPickerViewDelegate & UIPickerViewDataSource
+extension RegisterViewController: UIPickerViewDelegate, UIPickerViewDataSource {
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return serviceCategories.count
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return serviceCategories[row].displayName
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        selectedServiceCategory = serviceCategories[row]
     }
 }

@@ -1,5 +1,6 @@
 import UIKit
 import Firebase
+import FirebaseCore
 import FirebaseMessaging
 import FirebaseCore
 import SystemConfiguration
@@ -46,6 +47,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         } else {
             print("Firebase: ERROR - GoogleService-Info.plist not found!")
         }
+        
+        // Disable Firebase diagnostics collection
+        Analytics.setAnalyticsCollectionEnabled(false)
         
         do {
             // Ensure Firebase app is not already configured
@@ -110,7 +114,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Set up IQKeyboardManager
         IQKeyboardManager.shared.isEnabled = true
         IQKeyboardManager.shared.resignOnTouchOutside = true
-        IQKeyboardManager.shared.enableAutoToolbar = true
+        IQKeyboardManager.shared.enableAutoToolbar = false  // Disable the toolbar
         
         return true
     }

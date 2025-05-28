@@ -195,11 +195,14 @@ class LoginViewController: UIViewController {
     
     // MARK: - Action Methods
     @objc private func loginButtonTapped() {
-        guard let email = emailTextField.text, !email.isEmpty,
+        guard let emailInput = emailTextField.text, !emailInput.isEmpty,
               let password = passwordTextField.text, !password.isEmpty else {
             showAlert(title: "Error", message: "Please enter both email and password")
             return
         }
+        
+        // Normalize email to lowercase
+        let email = emailInput.lowercased()
         
         // Check for network connectivity
         if !isNetworkReachable() {
@@ -248,12 +251,14 @@ class LoginViewController: UIViewController {
     }
     
     private func checkEmailExists(email: String, completion: @escaping (Bool) -> Void) {
-        print("Checking if email exists: \(email)")
+        // Ensure email is lowercase for consistent checking
+        let normalizedEmail = email.lowercased()
+        print("Checking if email exists: \(normalizedEmail)")
         
         // Check directly in Firestore now that it's enabled
         let db = Firestore.firestore()
         db.collection("users")
-            .whereField("email", isEqualTo: email)
+            .whereField("email", isEqualTo: normalizedEmail)
             .limit(to: 1)
             .getDocuments { snapshot, error in
                 if let error = error {
@@ -281,8 +286,11 @@ class LoginViewController: UIViewController {
     }
     
     private func checkEmailWithAuth(email: String, completion: @escaping (Bool) -> Void) {
+        // Ensure email is lowercase for consistent checking
+        let normalizedEmail = email.lowercased()
+        
         // Use fetchSignInMethods which is the proper way to check if an email exists
-        Auth.auth().fetchSignInMethods(forEmail: email) { methods, error in
+        Auth.auth().fetchSignInMethods(forEmail: normalizedEmail) { methods, error in
             if let error = error {
                 print("Error checking email with Auth: \(error.localizedDescription)")
                 
@@ -319,7 +327,10 @@ class LoginViewController: UIViewController {
     }
     
     private func authenticateUser(email: String, password: String) {
-        Auth.auth().signIn(withEmail: email, password: password) { [weak self] result, error in
+        // Ensure email is lowercase for consistent authentication
+        let normalizedEmail = email.lowercased()
+        
+        Auth.auth().signIn(withEmail: normalizedEmail, password: password) { [weak self] result, error in
             guard let self = self else { return }
             
             // Hide activity indicator
@@ -476,7 +487,7 @@ class LoginViewController: UIViewController {
         searchNav.tabBarItem = UITabBarItem(title: "Search", image: UIImage(systemName: "magnifyingglass"), tag: 1)
         
         // Bookings tab
-        let bookingsVC = UIViewController() // Replace with your BookingsViewController
+        let bookingsVC = BookingsViewController()
         let bookingsNav = UINavigationController(rootViewController: bookingsVC)
         bookingsNav.tabBarItem = UITabBarItem(title: "Bookings", image: UIImage(systemName: "calendar"), tag: 2)
         
@@ -693,40 +704,15 @@ class LoginViewController: UIViewController {
         
         print("Firebase Diagnostics: Tests completed")
         
-        // Display results in UI for visibility
-        DispatchQueue.main.async {
-            self.showFirebaseDiagnosticResults()
-        }
+        //Display results in UI for visibility
+        // Diagnostic prompt disabled
+        // DispatchQueue.main.async {
+        //     self.showFirebaseDiagnosticResults()
+        // }
     }
     
     private func showFirebaseDiagnosticResults() {
-        // Create a simple alert to show test results
-        let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil
-        let bundleID = Bundle.main.bundleIdentifier ?? "unknown"
-        let firebaseConfigured = FirebaseApp.app() != nil
-        
-        let message = """
-        Firebase Diagnostics Results:
-        
-        - Firebase initialized: \(firebaseConfigured ? "✅" : "❌")
-        - GoogleService-Info.plist found: \(path ? "✅" : "❌")
-        - Bundle ID: \(bundleID)
-        
-        Check the debug console for full results.
-        
-        If Firebase Auth isn't working, please verify:
-        1. Firebase Auth is enabled in the Firebase console
-        2. The bundle ID matches between your app and Firebase
-        3. The GoogleService-Info.plist is included in your app bundle
-        """
-        
-        let alert = UIAlertController(
-            title: "Firebase Diagnostic Results",
-            message: message,
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        self.present(alert, animated: true)
+        // Function disabled - no longer showing diagnostic prompt
+        // This function is kept for reference but will not be called
     }
 }

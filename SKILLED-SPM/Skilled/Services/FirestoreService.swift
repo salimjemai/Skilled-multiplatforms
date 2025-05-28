@@ -202,11 +202,10 @@ class FirestoreService {
     
     /// Save booking to Firestore
     func saveBooking(_ booking: Booking, completion: @escaping (Error?) -> Void) {
-        do {
-            try bookingsRef.document(booking.id).setData(from: booking) { error in
-                completion(error)
-            }
-        } catch {
+        // Use the toDictionary method instead of Codable
+        let bookingData = booking.toDictionary()
+        
+        bookingsRef.document(booking.id).setData(bookingData) { error in
             completion(error)
         }
     }
@@ -221,12 +220,10 @@ class FirestoreService {
                     return
                 }
                 
-                do {
-                    let bookings = try snapshot.documents.compactMap { try $0.data(as: Booking.self) }
-                    completion(bookings, nil)
-                } catch {
-                    completion(nil, error)
+                let bookings = snapshot.documents.compactMap { document in
+                    return Booking.fromDictionary(document.data())
                 }
+                completion(bookings, nil)
             }
     }
     
@@ -240,12 +237,10 @@ class FirestoreService {
                     return
                 }
                 
-                do {
-                    let bookings = try snapshot.documents.compactMap { try $0.data(as: Booking.self) }
-                    completion(bookings, nil)
-                } catch {
-                    completion(nil, error)
+                let bookings = snapshot.documents.compactMap { document in
+                    return Booking.fromDictionary(document.data())
                 }
+                completion(bookings, nil)
             }
     }
     
