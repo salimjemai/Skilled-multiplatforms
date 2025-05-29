@@ -44,6 +44,42 @@ class ProfileViewController: UIViewController {
         return label
     }()
     
+    private let verifiedBadgeView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.2)
+        view.layer.cornerRadius = 12
+        view.isHidden = true
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
+    private let verifiedBadgeIcon: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "checkmark.seal.fill")
+        imageView.tintColor = .systemGreen
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+    
+    private let verifiedBadgeLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Verified"
+        label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .systemGreen
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private let addressLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private let serviceTypeLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16)
@@ -123,7 +159,11 @@ class ProfileViewController: UIViewController {
         view.addSubview(profileImageView)
         view.addSubview(nameLabel)
         view.addSubview(emailLabel)
+        view.addSubview(verifiedBadgeView)
+        verifiedBadgeView.addSubview(verifiedBadgeIcon)
+        verifiedBadgeView.addSubview(verifiedBadgeLabel)
         view.addSubview(userTypeLabel)
+        view.addSubview(addressLabel)
         view.addSubview(serviceTypeLabel)
         view.addSubview(editProfileButton)
         view.addSubview(signOutButton)
@@ -139,7 +179,21 @@ class ProfileViewController: UIViewController {
             nameLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             nameLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-            emailLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 8),
+            verifiedBadgeView.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 8),
+            verifiedBadgeView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            verifiedBadgeView.heightAnchor.constraint(equalToConstant: 24),
+            verifiedBadgeView.widthAnchor.constraint(equalToConstant: 90),
+            
+            verifiedBadgeIcon.leadingAnchor.constraint(equalTo: verifiedBadgeView.leadingAnchor, constant: 8),
+            verifiedBadgeIcon.centerYAnchor.constraint(equalTo: verifiedBadgeView.centerYAnchor),
+            verifiedBadgeIcon.widthAnchor.constraint(equalToConstant: 16),
+            verifiedBadgeIcon.heightAnchor.constraint(equalToConstant: 16),
+            
+            verifiedBadgeLabel.leadingAnchor.constraint(equalTo: verifiedBadgeIcon.trailingAnchor, constant: 4),
+            verifiedBadgeLabel.centerYAnchor.constraint(equalTo: verifiedBadgeView.centerYAnchor),
+            verifiedBadgeLabel.trailingAnchor.constraint(equalTo: verifiedBadgeView.trailingAnchor, constant: -8),
+            
+            emailLabel.topAnchor.constraint(equalTo: verifiedBadgeView.bottomAnchor, constant: 8),
             emailLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             emailLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
@@ -147,7 +201,11 @@ class ProfileViewController: UIViewController {
             userTypeLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             userTypeLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-            serviceTypeLabel.topAnchor.constraint(equalTo: userTypeLabel.bottomAnchor, constant: 8),
+            addressLabel.topAnchor.constraint(equalTo: userTypeLabel.bottomAnchor, constant: 8),
+            addressLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
+            addressLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
+            
+            serviceTypeLabel.topAnchor.constraint(equalTo: addressLabel.bottomAnchor, constant: 8),
             serviceTypeLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             serviceTypeLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
@@ -212,6 +270,29 @@ class ProfileViewController: UIViewController {
         nameLabel.text = user.fullName
         emailLabel.text = user.email
         
+        // Force show verified badge for testing
+        verifiedBadgeView.isHidden = false
+        
+        // Display address if available
+        if let location = user.location {
+            // Create address text with available fields
+            var addressComponents = [String]()
+            addressComponents.append(location.address)
+            
+            if let addressLine2 = location.addressLine2, !addressLine2.isEmpty {
+                addressComponents.append(addressLine2)
+            }
+            
+            addressComponents.append("\(location.city), \(location.state) \(location.zipCode)")
+            
+            // Join all components with newlines
+            addressLabel.text = addressComponents.joined(separator: "\n")
+            addressLabel.isHidden = false
+        } else {
+            addressLabel.text = "No address provided"
+            addressLabel.isHidden = false
+        }
+        
         // Set user type
         switch user.role {
         case .customer:
@@ -221,7 +302,7 @@ class ProfileViewController: UIViewController {
             
             // Show service types if available
             if let services = user.servicesOffered, !services.isEmpty {
-                let serviceTypes = services.map { $0.categoryDisplayName }.joined(separator: ", ")
+                let serviceTypes = services.joined(separator: ", ")
                 serviceTypeLabel.text = "Services: \(serviceTypes)"
                 serviceTypeLabel.isHidden = false
             }

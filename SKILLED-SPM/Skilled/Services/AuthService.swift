@@ -39,7 +39,7 @@ class AuthService {
     }
     
     /// Register a new user with Firebase
-    func register(email: String, password: String, name: String, completion: @escaping (Result<User, Error>) -> Void) {
+    func register(email: String, password: String, name: String, userRole: UserRole = .customer, completion: @escaping (Result<User, Error>) -> Void) {
         Auth.auth().createUser(withEmail: email, password: password) { [weak self] (result: AuthDataResult?, error: Error?) in
             if let error = error {
                 completion(.failure(error))
@@ -61,7 +61,7 @@ class AuthService {
                 email: email,
                 phoneNumber: nil,
                 profileImageUrl: nil,
-                role: .customer,
+                role: userRole,
                 location: nil,
                 isVerified: false,
                 createdAt: Date(),

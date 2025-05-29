@@ -96,11 +96,21 @@ struct User: Codable {
         }
         
         if let location = location {
-            dict["location"] = [
+            var locationDict: [String: Any] = [
                 "latitude": location.latitude,
                 "longitude": location.longitude,
-                "address": location.address
+                "address": location.address,
+                "city": location.city,
+                "state": location.state,
+                "zipCode": location.zipCode,
+                "country": location.country
             ]
+            
+            if let addressLine2 = location.addressLine2 {
+                locationDict["addressLine2"] = addressLine2
+            }
+            
+            dict["location"] = locationDict
         }
         
         // Add provider-specific properties if they exist
@@ -195,7 +205,23 @@ struct User: Codable {
            let latitude = locationDict["latitude"] as? Double,
            let longitude = locationDict["longitude"] as? Double,
            let address = locationDict["address"] as? String {
-            self.location = Location(latitude: latitude, longitude: longitude, address: address, city: "Austin", state: "TX", zipCode: "78704", country: "US")
+            
+            let addressLine2 = locationDict["addressLine2"] as? String
+            let city = locationDict["city"] as? String ?? "Austin"
+            let state = locationDict["state"] as? String ?? "TX"
+            let zipCode = locationDict["zipCode"] as? String ?? "78704"
+            let country = locationDict["country"] as? String ?? "US"
+            
+            self.location = Location(
+                latitude: latitude,
+                longitude: longitude,
+                address: address,
+                addressLine2: addressLine2,
+                city: city,
+                state: state,
+                zipCode: zipCode,
+                country: country
+            )
         } else {
             self.location = nil
         }

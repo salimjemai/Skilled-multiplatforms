@@ -56,6 +56,41 @@ class EditProfileViewController: UIViewController {
         return textField
     }()
     
+    private let roleSegmentedControl: UISegmentedControl = {
+        let items = ["Client", "Service Provider"]
+        let control = UISegmentedControl(items: items)
+        control.selectedSegmentIndex = 0
+        control.translatesAutoresizingMaskIntoConstraints = false
+        return control
+    }()
+    
+    // Service type selection UI
+    let serviceTypeStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 10
+        stackView.isHidden = true
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        return stackView
+    }()
+    
+    let serviceTypeLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Update Service Types:"
+        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let serviceTypeOptions: [String] = [
+        "Plumbing", "Electrical", "Carpentry", "Cleaning", 
+        "Painting", "Landscaping", "Moving", "Handyman",
+        "HVAC", "Roofing", "Flooring", "Appliance Repair",
+        "Pest Control", "Window Cleaning", "Pool Service", "Other"
+    ]
+    var serviceTypeCheckboxes: [UIButton] = []
+    var selectedServices: [String] = []
+    
     private let addressLine1TextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "Address Line 1"
@@ -134,6 +169,9 @@ class EditProfileViewController: UIViewController {
         setupActions()
         populateFields()
         
+        // Add action to role segmented control
+        roleSegmentedControl.addTarget(self, action: #selector(roleChanged(_:)), for: .valueChanged)
+        
         // Check if we need to highlight address fields
         if let addressRequired = navigationItem.rightBarButtonItem?.title, addressRequired == "Address Required" {
             highlightAddressFields()
@@ -192,6 +230,21 @@ class EditProfileViewController: UIViewController {
         contentView.addSubview(changePhotoButton)
         contentView.addSubview(firstNameTextField)
         contentView.addSubview(lastNameTextField)
+        contentView.addSubview(roleSegmentedControl)
+        contentView.addSubview(serviceTypeStackView)
+        serviceTypeStackView.addArrangedSubview(serviceTypeLabel)
+        
+        // Create checkboxes for each service type
+        for serviceType in serviceTypeOptions {
+            let button = UIButton(type: .system)
+            button.setTitle("□ \(serviceType)", for: .normal)
+            button.setTitle("✓ \(serviceType)", for: .selected)
+            button.contentHorizontalAlignment = .left
+            button.addTarget(self, action: #selector(serviceTypeToggled(_:)), for: .touchUpInside)
+            serviceTypeStackView.addArrangedSubview(button)
+            serviceTypeCheckboxes.append(button)
+        }
+        
         contentView.addSubview(addressLine1TextField)
         contentView.addSubview(addressLine2TextField)
         contentView.addSubview(cityTextField)
@@ -230,6 +283,17 @@ class EditProfileViewController: UIViewController {
             lastNameTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             lastNameTextField.heightAnchor.constraint(equalToConstant: 44),
             
+            // Role segmented control is hidden but keep constraints
+            roleSegmentedControl.topAnchor.constraint(equalTo: lastNameTextField.bottomAnchor, constant: 20),
+            roleSegmentedControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            roleSegmentedControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            roleSegmentedControl.heightAnchor.constraint(equalToConstant: 44),
+            
+            // Service type stack after address fields
+            serviceTypeStackView.topAnchor.constraint(equalTo: zipCodeTextField.bottomAnchor, constant: 20),
+            serviceTypeStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            serviceTypeStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            
             addressLine1TextField.topAnchor.constraint(equalTo: lastNameTextField.bottomAnchor, constant: 20),
             addressLine1TextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             addressLine1TextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
@@ -255,11 +319,11 @@ class EditProfileViewController: UIViewController {
             zipCodeTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             zipCodeTextField.heightAnchor.constraint(equalToConstant: 44),
             
-            saveButton.topAnchor.constraint(equalTo: stateTextField.bottomAnchor, constant: 30),
+            saveButton.topAnchor.constraint(equalTo: serviceTypeStackView.bottomAnchor, constant: 30),
             saveButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
             saveButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
             saveButton.heightAnchor.constraint(equalToConstant: 50),
-            saveButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
+            saveButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -40),
             
             activityIndicator.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             activityIndicator.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
@@ -323,8 +387,24 @@ class EditProfileViewController: UIViewController {
         firstNameTextField.text = user.firstName
         lastNameTextField.text = user.lastName
         
+        // Hide role selection for everyone
+        roleSegmentedControl.isHidden = true
+        
+        // Only show service types for providers
+        if user.role == .provider {
+            serviceTypeStackView.isHidden = false
+            
+            // Force update service types after a short delay to ensure UI is ready
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.updateServiceTypeCheckboxes()
+            }
+        } else {
+            serviceTypeStackView.isHidden = true
+        }
+        
         if let location = user.location {
             addressLine1TextField.text = location.address
+            addressLine2TextField.text = location.addressLine2
             cityTextField.text = location.city
             stateTextField.text = location.state
             zipCodeTextField.text = location.zipCode
@@ -336,6 +416,7 @@ class EditProfileViewController: UIViewController {
                 if let data = data, let image = UIImage(data: data) {
                     DispatchQueue.main.async {
                         self?.profileImageView.image = image
+                        self?.selectedImage = image
                     }
                 }
             }.resume()
@@ -425,6 +506,18 @@ class EditProfileViewController: UIViewController {
         // Update user object
         updatedUser.firstName = firstName
         updatedUser.lastName = lastName
+        
+        // Keep the original role (can't change roles)
+        if let originalUser = user {
+            updatedUser.role = originalUser.role
+        }
+        
+        // Update services if provider
+        if updatedUser.role == .provider {
+            updatedUser.servicesOffered = selectedServices
+        } else {
+            updatedUser.servicesOffered = nil
+        }
         
         // Only update location if address fields are provided
         if !addressLine1.isEmpty && !city.isEmpty && !state.isEmpty && !zipCode.isEmpty {
@@ -517,6 +610,11 @@ class EditProfileViewController: UIViewController {
                         profileVC.userUpdated(user)
                     }
                     
+                    // Update profile images in navigation bars
+                    if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                        appDelegate.updateProfileImagesInNavBars()
+                    }
+                    
                     self.showAlert(title: "Success", message: "Profile updated successfully") { _ in
                         self.navigationController?.popViewController(animated: true)
                     }
@@ -540,6 +638,11 @@ class EditProfileViewController: UIViewController {
                     // Update the user in the parent view controller
                     if let profileVC = self.navigationController?.viewControllers.first(where: { $0 is ProfileViewController }) as? ProfileViewController {
                         profileVC.userUpdated(user)
+                    }
+                    
+                    // Update profile images in navigation bars
+                    if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+                        appDelegate.updateProfileImagesInNavBars()
                     }
                     
                     self.showAlert(title: "Success", message: "Profile created successfully") { _ in
