@@ -319,7 +319,7 @@ class EditProfileViewController: UIViewController {
             zipCodeTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             zipCodeTextField.heightAnchor.constraint(equalToConstant: 44),
             
-            saveButton.topAnchor.constraint(equalTo: serviceTypeStackView.bottomAnchor, constant: 30),
+            saveButton.topAnchor.constraint(equalTo: user?.role == .provider ? serviceTypeStackView.bottomAnchor : zipCodeTextField.bottomAnchor, constant: 20),
             saveButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
             saveButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
             saveButton.heightAnchor.constraint(equalToConstant: 50),
@@ -573,7 +573,15 @@ class EditProfileViewController: UIViewController {
     
     private func saveUserData(_ user: User) {
         let db = Firestore.firestore()
-        let userData = user.toDictionary()
+        
+        // Ensure servicesOffered is properly set for providers
+        var updatedUser = user
+        if updatedUser.role == .provider {
+            print("Saving provider with services: \(selectedServices)")
+            updatedUser.servicesOffered = selectedServices
+        }
+        
+        let userData = updatedUser.toDictionary()
         
         print("Saving user data to Firestore...")
         
@@ -607,7 +615,16 @@ class EditProfileViewController: UIViewController {
                     
                     // Update the user in the parent view controller
                     if let profileVC = self.navigationController?.viewControllers.first(where: { $0 is ProfileViewController }) as? ProfileViewController {
-                        profileVC.userUpdated(user)
+                        profileVC.userUpdated(updatedUser)
+                    }
+                    
+                    // Update profile images in navigation bars and UserDefaults
+                    if let selectedImage = self.selectedImage {
+                        // Store in UserDefaults for immediate access
+                        if let imageData = selectedImage.jpegData(compressionQuality: 0.5) {
+                            UserDefaults.standard.set(imageData, forKey: "profileImage_\(user.id)")
+                            NotificationCenter.default.post(name: NSNotification.Name("ProfileImageUpdated"), object: nil)
+                        }
                     }
                     
                     // Update profile images in navigation bars
@@ -637,7 +654,16 @@ class EditProfileViewController: UIViewController {
                     
                     // Update the user in the parent view controller
                     if let profileVC = self.navigationController?.viewControllers.first(where: { $0 is ProfileViewController }) as? ProfileViewController {
-                        profileVC.userUpdated(user)
+                        profileVC.userUpdated(updatedUser)
+                    }
+                    
+                    // Update profile images in navigation bars and UserDefaults
+                    if let selectedImage = self.selectedImage {
+                        // Store in UserDefaults for immediate access
+                        if let imageData = selectedImage.jpegData(compressionQuality: 0.5) {
+                            UserDefaults.standard.set(imageData, forKey: "profileImage_\(user.id)")
+                            NotificationCenter.default.post(name: NSNotification.Name("ProfileImageUpdated"), object: nil)
+                        }
                     }
                     
                     // Update profile images in navigation bars

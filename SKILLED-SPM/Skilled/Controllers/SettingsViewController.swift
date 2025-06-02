@@ -15,13 +15,13 @@ class SettingsViewController: UIViewController {
     
     // MARK: - Properties
     private var currentUser: User?
-    private let sections = ["Profile", "Chat Settings", "Booking Settings", "Search Settings", "App Settings", "Support & About"]
+    private let sections = ["Profile", "Chat Settings", "Booking Settings", "Search Settings", "Legal", "Support"]
     private let sectionItems: [[String]] = [
         ["Edit Profile", "Verification", "Address"],
         ["Notifications", "Message Privacy"],
-        ["Payment Methods", "Booking History", "Preferences"],
+        ["Payment Methods", "Payment History", "Preferences"],
         ["Search History", "Saved Searches", "Location Settings"],
-        ["About", "Terms of Service", "Privacy Policy"],
+        ["Terms of Service", "Privacy Policy"],
         ["Contact Support", "Rate App", "About Us", "Sign Out"]
     ]
     
@@ -115,9 +115,9 @@ class SettingsViewController: UIViewController {
             handleBookingSettings(at: row)
         case 3: // Search Settings
             handleSearchSettings(at: row)
-        case 4: // App Settings
+        case 4: // Legal section
             handleAppSettings(at: row)
-        case 5: // Support & About section
+        case 5: // Support section
             handleSupportSettings(at: row)
         default:
             break
@@ -145,7 +145,18 @@ class SettingsViewController: UIViewController {
     }
     
     private func handleBookingSettings(at row: Int) {
-        showAlert(title: "Booking Settings", message: "Booking settings coming soon")
+        switch row {
+        case 0: // Payment Methods
+            let paymentMethodsVC = PaymentMethodsViewController()
+            navigationController?.pushViewController(paymentMethodsVC, animated: true)
+        case 1: // Payment History
+            let paymentsHistoryVC = PaymentsHistoryViewController()
+            navigationController?.pushViewController(paymentsHistoryVC, animated: true)
+        case 2: // Preferences
+            showAlert(title: "Preferences", message: "Booking preferences coming soon")
+        default:
+            break
+        }
     }
     
     private func handleSearchSettings(at row: Int) {
@@ -153,7 +164,16 @@ class SettingsViewController: UIViewController {
     }
     
     private func handleAppSettings(at row: Int) {
-        showAlert(title: "App Settings", message: "App settings coming soon")
+        switch row {
+        case 0: // Terms of Service
+            let termsVC = TermsOfServiceViewController()
+            navigationController?.pushViewController(termsVC, animated: true)
+        case 1: // Privacy Policy
+            let privacyVC = PrivacyPolicyViewController()
+            navigationController?.pushViewController(privacyVC, animated: true)
+        default:
+            break
+        }
     }
     
     private func handleSupportSettings(at row: Int) {
@@ -161,9 +181,11 @@ class SettingsViewController: UIViewController {
         case 0: // Contact Support
             showAlert(title: "Contact Support", message: "Support features coming soon")
         case 1: // Rate App
-            showAlert(title: "Rate App", message: "Rating features coming soon")
+            let rateAppVC = RateAppViewController()
+            navigationController?.pushViewController(rateAppVC, animated: true)
         case 2: // About Us
-            showAlert(title: "About Us", message: "About Us information coming soon")
+            let aboutUsVC = AboutUsViewController()
+            navigationController?.pushViewController(aboutUsVC, animated: true)
         case 3: // Sign Out
             signOut()
         default:

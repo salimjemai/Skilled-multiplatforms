@@ -19,11 +19,17 @@ extension EditProfileViewController {
         // Update selected services
         if let title = sender.title(for: .normal)?.replacingOccurrences(of: "□ ", with: "").replacingOccurrences(of: "✓ ", with: "") {
             if sender.isSelected {
-                selectedServices.append(title)
+                if !selectedServices.contains(title) {
+                    selectedServices.append(title)
+                    print("Added service: \(title)")
+                }
             } else if let index = selectedServices.firstIndex(of: title) {
                 selectedServices.remove(at: index)
+                print("Removed service: \(title)")
             }
         }
+        
+        print("Current selected services: \(selectedServices)")
     }
     
     // In EditProfileViewController.swift, find the updateServiceTypeCheckboxes method

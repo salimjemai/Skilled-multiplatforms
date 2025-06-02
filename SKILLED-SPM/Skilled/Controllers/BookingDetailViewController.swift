@@ -1,6 +1,7 @@
 import UIKit
 import FirebaseAuth
 import FirebaseFirestore
+import PassKit
 
 class BookingDetailViewController: UIViewController {
     
@@ -281,8 +282,9 @@ class BookingDetailViewController: UIViewController {
                 actionButton.setTitle("Mark as Completed", for: .normal)
                 actionButton.backgroundColor = .systemGreen
             } else {
-                actionButton.setTitle("Cancel Booking", for: .normal)
-                actionButton.backgroundColor = .systemRed
+                // For clients with confirmed bookings, show payment option
+                actionButton.setTitle("Make Payment", for: .normal)
+                actionButton.backgroundColor = .systemBlue
             }
             
         case .completed:
@@ -316,7 +318,8 @@ class BookingDetailViewController: UIViewController {
             if isProvider {
                 updateBookingStatus(.completed)
             } else {
-                updateBookingStatus(.cancelled)
+                // Show payment screen for clients
+                showPaymentScreen()
             }
             
         case .completed:
@@ -328,6 +331,12 @@ class BookingDetailViewController: UIViewController {
         case .cancelled:
             break
         }
+    }
+    
+    private func showPaymentScreen() {
+        guard let booking = booking else { return }
+        let paymentVC = PaymentViewController(booking: booking)
+        navigationController?.pushViewController(paymentVC, animated: true)
     }
     
     private func updateBookingStatus(_ newStatus: BookingStatus) {

@@ -1,5 +1,6 @@
 import UIKit
 import FirebaseAuth
+import FirebaseFirestore
 
 protocol UsersListViewControllerDelegate: AnyObject {
     func didSelectUser(_ user: User)
@@ -66,6 +67,17 @@ class ChatViewController: UIViewController {
         
         title = otherUser?.fullName ?? "Chat"
         view.backgroundColor = .systemBackground
+        
+        // Load other user's details if not already loaded
+        if otherUser == nil && otherUserId != nil {
+            let db = Firestore.firestore()
+            db.collection("users").document(otherUserId).getDocument { [weak self] snapshot, error in
+                if let data = snapshot?.data(), let user = User(dictionary: data) {
+                    self?.otherUser = user
+                    self?.title = user.fullName
+                }
+            }
+        }
         
         setupUI()
         setupKeyboardObservers()

@@ -474,40 +474,7 @@ class LoginViewController: UIViewController {
     
     private func loginSuccessful() {
         // Create a tab bar controller for the main app interface
-        let tabBarController = UITabBarController()
-        
-        // Home tab
-        let homeVC = HomeViewController()
-        let homeNav = UINavigationController(rootViewController: homeVC)
-        homeNav.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), tag: 0)
-        
-        // Search tab
-        let searchVC = ServiceListViewController()
-        let searchNav = UINavigationController(rootViewController: searchVC)
-        searchNav.tabBarItem = UITabBarItem(title: "Search", image: UIImage(systemName: "magnifyingglass"), tag: 1)
-        
-        // Bookings tab
-        let bookingsVC = BookingsViewController()
-        let bookingsNav = UINavigationController(rootViewController: bookingsVC)
-        bookingsNav.tabBarItem = UITabBarItem(title: "Bookings", image: UIImage(systemName: "calendar"), tag: 2)
-        
-        // Messages tab
-        let conversationsVC = ConversationsViewController()
-        let conversationsNav = UINavigationController(rootViewController: conversationsVC)
-        conversationsNav.tabBarItem = UITabBarItem(title: "Messages", image: UIImage(systemName: "message"), tag: 3)
-        
-        // Profile tab
-        let profileVC = ProfileViewController()
-        let profileNav = UINavigationController(rootViewController: profileVC)
-        profileNav.tabBarItem = UITabBarItem(title: "Profile", image: UIImage(systemName: "person"), tag: 3)
-        
-        // Set up tab bar
-        // Settings tab
-        let settingsVC = SettingsViewController()
-        let settingsNav = UINavigationController(rootViewController: settingsVC)
-        settingsNav.tabBarItem = UITabBarItem(title: "Settings", image: UIImage(systemName: "gear"), tag: 4)
-        
-        tabBarController.viewControllers = [homeNav, searchNav, bookingsNav, conversationsNav, settingsNav]
+        let tabBarController = TabBarController()
         tabBarController.modalPresentationStyle = .fullScreen
         
         // Present the tab bar controller
