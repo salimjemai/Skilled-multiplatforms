@@ -34,6 +34,23 @@ class SettingsViewController: UIViewController {
         
         setupUI()
         loadUserProfile()
+        
+        // Register for profile update notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleProfileUpdated),
+            name: NSNotification.Name("ProfileImageUpdated"),
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func handleProfileUpdated() {
+        // Reload user profile when notification is received
+        loadUserProfile()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -41,6 +58,9 @@ class SettingsViewController: UIViewController {
         
         // Clear any existing right bar button item
         navigationItem.rightBarButtonItem = nil
+        
+        // Reload user profile data when view appears
+        loadUserProfile()
     }
     
     // MARK: - UI Setup
@@ -353,8 +373,13 @@ class ProfileHeaderView: UITableViewHeaderFooterView {
         // Force show verified badge for testing
         verifiedBadge.isHidden = false
         
-        // Load profile image if available
-        if let imageUrl = user.profileImageUrl, let url = URL(string: imageUrl) {
+        // First check if we have a cached image in UserDefaults
+        if let imageData = UserDefaults.standard.data(forKey: "profileImage_\(user.id)"),
+           let image = UIImage(data: imageData) {
+            profileImageView.image = image
+        }
+        // Then load profile image if available
+        else if let imageUrl = user.profileImageUrl, let url = URL(string: imageUrl) {
             URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
                 if let data = data, let image = UIImage(data: data) {
                     DispatchQueue.main.async {
@@ -367,9 +392,5 @@ class ProfileHeaderView: UITableViewHeaderFooterView {
             profileImageView.image = UIImage(systemName: "person.circle.fill")
             profileImageView.tintColor = .systemBlue
         }
-        
-        // Print debug info
-        print("User verification status: \(user.isVerified)")
-        print("Verified badge hidden: \(verifiedBadge.isHidden)")
     }
 }

@@ -26,6 +26,13 @@ enum PaymentMethod: String, Codable {
     case bankTransfer = "bankTransfer"
 }
 
+struct SavedPaymentMethod: Codable {
+    var type: PaymentMethod
+    var last4: String?
+    var isDefault: Bool
+    var cardBrand: String?
+}
+
 struct Payment: Codable {
     let id: String
     let bookingId: String

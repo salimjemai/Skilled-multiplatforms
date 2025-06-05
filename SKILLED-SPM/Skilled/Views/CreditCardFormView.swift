@@ -214,6 +214,13 @@ extension CreditCardFormView: UITextFieldDelegate {
                 return false
             }
             
+            // Only allow valid month values (01-12)
+            if newText.count == 2 {
+                if let month = Int(newText), month < 1 || month > 12 {
+                    return false
+                }
+            }
+            
         case cvvTextField:
             // Limit to 3-4 digits
             if newText.count > 4 { return false }

@@ -190,7 +190,7 @@ class CreditCardEntryView: UIView {
                 cardNumberLabel.text = formattedNumber
             }
             
-            // Update card type image
+            // Update card type image immediately
             updateCardTypeImage(for: text)
         }
     }
@@ -222,7 +222,8 @@ class CreditCardEntryView: UIView {
     
     // MARK: - Helper Methods
     private func formatCardNumber(_ text: String) -> String {
-        let numbers = text.replacingOccurrences(of: " ", with: "")
+        // Only allow digits
+        let numbers = text.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
         var result = ""
         for (index, character) in numbers.enumerated() {
             if index > 0 && index % 4 == 0 {
@@ -230,13 +231,22 @@ class CreditCardEntryView: UIView {
             }
             result += String(character)
         }
+        
+        // Update card type image immediately when typing
+        updateCardTypeImage(for: numbers)
+        
         return result
     }
     
     private func formatExpiryDate(_ text: String) -> String {
-        let numbers = text.replacingOccurrences(of: "/", with: "")
+        // Only allow digits
+        let numbers = text.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
         var result = ""
-        for (index, character) in numbers.enumerated() {
+        
+        // Limit to 4 digits (MM/YY)
+        let limitedNumbers = String(numbers.prefix(4))
+        
+        for (index, character) in limitedNumbers.enumerated() {
             if index == 2 {
                 result += "/"
             }
@@ -254,22 +264,28 @@ class CreditCardEntryView: UIView {
             return
         }
         
+        // Determine card brand based on first digits
         if cleanNumber.hasPrefix("4") {
             // Visa
-            cardImageView.image = UIImage(named: "visa") ?? UIImage(systemName: "creditcard")
-            cardImageView.tintColor = .systemBlue
+            cardImageView.image = UIImage(named: "visa") ?? 
+                                 UIImage(systemName: "creditcard.fill")
+            cardImageView.tintColor = cardImageView.image == UIImage(systemName: "creditcard.fill") ? .systemBlue : nil
         } else if cleanNumber.hasPrefix("5") {
             // MasterCard
-            cardImageView.image = UIImage(named: "mastercard") ?? UIImage(systemName: "creditcard")
-            cardImageView.tintColor = .systemRed
+            cardImageView.image = UIImage(named: "mastercard") ?? 
+                                 UIImage(systemName: "creditcard.fill")
+            cardImageView.tintColor = cardImageView.image == UIImage(systemName: "creditcard.fill") ? .systemRed : nil
         } else if cleanNumber.hasPrefix("3") {
-            // Amex
-            cardImageView.image = UIImage(named: "amex") ?? UIImage(systemName: "creditcard")
-            cardImageView.tintColor = .systemIndigo
+            // Amex - try both naming conventions
+            cardImageView.image = UIImage(named: "american-express") ?? 
+                                 UIImage(named: "amex") ?? 
+                                 UIImage(systemName: "creditcard.fill")
+            cardImageView.tintColor = cardImageView.image == UIImage(systemName: "creditcard.fill") ? .systemIndigo : nil
         } else if cleanNumber.hasPrefix("6") {
             // Discover
-            cardImageView.image = UIImage(named: "discover") ?? UIImage(systemName: "creditcard")
-            cardImageView.tintColor = .systemOrange
+            cardImageView.image = UIImage(named: "discover") ?? 
+                                 UIImage(systemName: "creditcard.fill")
+            cardImageView.tintColor = cardImageView.image == UIImage(systemName: "creditcard.fill") ? .systemOrange : nil
         } else {
             cardImageView.image = UIImage(systemName: "creditcard")
             cardImageView.tintColor = .systemGray
@@ -291,5 +307,29 @@ class CreditCardEntryView: UIView {
             cvv: cvv,
             name: name
         )
+    }
+    
+    func updateWithScannedCard(number: String, expiry: String, name: String, cvv: String = "") {
+        // Update the text fields
+        cardNumberField.text = formatCardNumber(number)
+        expiryDateField.text = expiry
+        nameField.text = name
+        cvvField.text = cvv
+        
+        // Trigger the change events to update the card preview
+        cardNumberChanged()
+        expiryChanged()
+        nameChanged()
+        
+        // Animate a highlight effect to show the fields were updated
+        [cardNumberField, expiryDateField, nameField, cvvField].forEach { field in
+            UIView.animate(withDuration: 0.3) {
+                field?.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.1)
+            } completion: { _ in
+                UIView.animate(withDuration: 0.3, delay: 0.5) {
+                    field?.backgroundColor = .systemBackground
+                }
+            }
+        }
     }
 }
