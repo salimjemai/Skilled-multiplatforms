@@ -1,0 +1,56 @@
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# Visual Studio
+.vs/
+
+# Mac build files
+*.DS_Store
+
+# Rider
+.idea/
+*.sln.iml
+
+# Logs
+*.log
+
+# Others
+*.db
+*.apk
+*.apks
+*.aab
+*.xcuserstate
+
+# Maui specific
+**/platforms/*/bin/
+**/platforms/*/obj/
+
+# NuGet
+*.nupkg
+.nuget/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Test results
+TestResults/
+
+# Temporary files
+~$*
+
+# Copilot and VS cache
+Copilot-chat/
+copilotIndices/
+FileContentIndex/
+v17/
+CopilotSnapshot/ 

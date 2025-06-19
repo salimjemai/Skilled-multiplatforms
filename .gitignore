@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/iOS/copilot-chat/78d79818/sessions/993fce05-ba10-4af2-9290-aff7bfae304f
+/.vs/iOS/CopilotIndices/17.14.786.1071/CodeChunks.db
+/.vs/iOS/CopilotIndices/17.14.786.1071/SemanticSymbols.db
+*.vsidx
+*.wsuo
