@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Skilled.Views.SettingsPage"
+             Title="Settings">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- Profile Section -->
+            <Frame Padding="20" BackgroundColor="White" CornerRadius="10" HasShadow="True">
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                    <Image Grid.Row="0" Grid.Column="0" Source="{Binding CurrentUser.ProfileImageUrl}" 
+                           HeightRequest="80" WidthRequest="80" Aspect="AspectFill" />
+                    
+                    <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="5" Margin="20,0,0,0">
+                        <Label Text="{Binding CurrentUser.Name}" FontSize="18" FontAttributes="Bold" />
+                        <Label Text="{Binding CurrentUser.Email}" FontSize="14" TextColor="Gray" />
+                        <Label Text="{Binding CurrentUser.Phone}" FontSize="14" TextColor="Gray" />
+                    </VerticalStackLayout>
+                    
+                    <Button Grid.Row="1" Grid.Column="1" Text="Edit Profile" 
+                           HorizontalOptions="End" VerticalOptions="End"
+                           Clicked="OnEditProfileClicked" />
+                </Grid>
+            </Frame>
+
+            <!-- Settings Options -->
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Account" FontSize="16" FontAttributes="Bold" />
+                
+                <Frame Padding="15" BackgroundColor="White" CornerRadius="10" HasShadow="True">
+                    <VerticalStackLayout Spacing="15">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Payment Methods" VerticalOptions="Center" />
+                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Booking History" VerticalOptions="Center" />
+                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Notifications" VerticalOptions="Center" />
+                            <Switch Grid.Column="1" IsToggled="{Binding NotificationsEnabled}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Support" FontSize="16" FontAttributes="Bold" />
+                
+                <Frame Padding="15" BackgroundColor="White" CornerRadius="10" HasShadow="True">
+                    <VerticalStackLayout Spacing="15">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Help &amp; Support" VerticalOptions="Center" />
+                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Privacy Policy" VerticalOptions="Center" />
+                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="Terms of Service" VerticalOptions="Center" />
+                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0" Text="About Us" VerticalOptions="Center" />
+                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+
+            <!-- Logout Button -->
+            <Button Text="Logout" BackgroundColor="Red" TextColor="White" 
+                   CornerRadius="10" Padding="20" Clicked="OnLogoutClicked" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage> 

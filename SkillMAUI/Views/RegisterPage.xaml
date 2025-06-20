@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Skilled.Views.RegisterPage"
+             Title="Register">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- Header -->
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Create Account" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" />
+                <Label Text="Join Skilled to find the best service providers" FontSize="16" TextColor="Gray" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+
+            <!-- Registration Form -->
+            <VerticalStackLayout Spacing="15">
+                <!-- Name -->
+                <Entry Placeholder="Full Name" x:Name="NameEntry" />
+                
+                <!-- Email -->
+                <Entry Placeholder="Email Address" Keyboard="Email" x:Name="EmailEntry" />
+                
+                <!-- Phone -->
+                <Entry Placeholder="Phone Number" Keyboard="Telephone" x:Name="PhoneEntry" />
+                
+                <!-- Password -->
+                <Entry Placeholder="Password" IsPassword="True" x:Name="PasswordEntry" />
+                
+                <!-- Confirm Password -->
+                <Entry Placeholder="Confirm Password" IsPassword="True" x:Name="ConfirmPasswordEntry" />
+                
+                <!-- User Type Selection -->
+                <Label Text="I am a:" FontSize="16" FontAttributes="Bold" />
+                <HorizontalStackLayout Spacing="10">
+                    <RadioButton Content="Customer" IsChecked="{Binding IsCustomer}" GroupName="UserType" />
+                    <RadioButton Content="Service Provider" IsChecked="{Binding IsProvider}" GroupName="UserType" />
+                </HorizontalStackLayout>
+                
+                <!-- Terms and Conditions -->
+                <HorizontalStackLayout Spacing="10">
+                    <CheckBox IsChecked="{Binding AgreeToTerms}" />
+                    <Label Text="I agree to the Terms of Service and Privacy Policy" FontSize="12" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- Register Button -->
+            <Button Text="Create Account" 
+                   BackgroundColor="Blue" 
+                   TextColor="White" 
+                   CornerRadius="10" 
+                   Padding="20"
+                   Command="{Binding RegisterCommand}" />
+
+            <!-- Login Link -->
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
+                <Label Text="Already have an account?" FontSize="14" />
+                <Label Text="Sign In" FontSize="14" TextColor="Blue" TextDecorations="Underline">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateToLoginCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage> 

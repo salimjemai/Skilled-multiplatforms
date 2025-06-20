@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Skilled.Views.HomePage"
+             Title="Skilled">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+            
+            <!-- Welcome Section -->
+            <VerticalStackLayout Spacing="8">
+                <Label 
+                    Text="Welcome to Skilled"
+                    FontSize="24"
+                    FontAttributes="Bold"
+                    HorizontalOptions="Center" />
+                <Label 
+                    Text="Find skilled professionals for any job"
+                    FontSize="16"
+                    TextColor="Gray"
+                    HorizontalOptions="Center" />
+            </VerticalStackLayout>
+
+            <!-- Search Bar -->
+            <Frame Padding="15" BackgroundColor="LightGray" CornerRadius="10">
+                <HorizontalStackLayout Spacing="10">
+                    <Image Source="search.png" HeightRequest="20" WidthRequest="20" />
+                    <Entry 
+                        Placeholder="Plumbing, electrical, carpentry..."
+                        HorizontalOptions="FillAndExpand"
+                        x:Name="SearchEntry" />
+                </HorizontalStackLayout>
+            </Frame>
+
+            <!-- Service Categories -->
+            <VerticalStackLayout Spacing="10">
+                <Label 
+                    Text="Service Categories"
+                    FontSize="18"
+                    FontAttributes="Bold" />
+                
+                <CollectionView x:Name="CategoriesCollectionView" 
+                               ItemsSource="{Binding Categories}"
+                               SelectionMode="Single"
+                               SelectionChanged="OnCategorySelected">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="15" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame WidthRequest="100" HeightRequest="120" 
+                                   BackgroundColor="LightGray" CornerRadius="10" Padding="10">
+                                <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
+                                    <Image Source="{Binding Icon}" HeightRequest="40" WidthRequest="40" />
+                                    <Label Text="{Binding Name}" FontSize="12" HorizontalOptions="Center" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+            <!-- Featured Providers -->
+            <VerticalStackLayout Spacing="10">
+                <Label 
+                    Text="Top Service Providers"
+                    FontSize="18"
+                    FontAttributes="Bold" />
+                
+                <CollectionView x:Name="ProvidersCollectionView" 
+                               ItemsSource="{Binding FeaturedProviders}"
+                               SelectionMode="Single"
+                               SelectionChanged="OnProviderSelected">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Padding="15" BackgroundColor="White" CornerRadius="10" 
+                                   HasShadow="True" Margin="0,0,0,10">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Image Grid.Column="0" Source="{Binding ProfileImage}" 
+                                           HeightRequest="60" WidthRequest="60" 
+                                           Aspect="AspectFill" />
+                                    
+                                    <VerticalStackLayout Grid.Column="1" Spacing="5" Margin="15,0">
+                                        <Label Text="{Binding BusinessName}" FontAttributes="Bold" />
+                                        <Label Text="{Binding Description}" FontSize="12" TextColor="Gray" 
+                                               MaxLines="2" LineBreakMode="TailTruncation" />
+                                        <HorizontalStackLayout Spacing="5">
+                                            <Label Text="{Binding AverageRating, StringFormat='{0:F1}'}" FontSize="12" />
+                                            <Label Text="★" TextColor="Orange" FontSize="12" />
+                                            <Label Text="{Binding TotalReviews, StringFormat='({0} reviews)'}" 
+                                                   FontSize="12" TextColor="Gray" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                    
+                                    <VerticalStackLayout Grid.Column="2" HorizontalOptions="End">
+                                        <Label Text="{Binding YearsOfExperience, StringFormat='{0} years'}" 
+                                               FontSize="12" TextColor="Blue" />
+                                        <Label Text="Verified" FontSize="10" TextColor="Green" 
+                                               IsVisible="{Binding InsuranceVerified}" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage> 
