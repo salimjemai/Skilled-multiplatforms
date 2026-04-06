@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Maui.Storage;
 using Newtonsoft.Json;
 
 namespace Skilled.Services;
@@ -21,14 +23,14 @@ public class PreferenceService : IPreferenceService
             {
                 return defaultValue;
             }
-            
+
             try
             {
                 if (typeof(T) == typeof(string))
                 {
                     return (T)(object)value;
                 }
-                
+
                 return JsonConvert.DeserializeObject<T>(value);
             }
             catch
@@ -36,10 +38,10 @@ public class PreferenceService : IPreferenceService
                 return defaultValue;
             }
         }
-        
+
         return defaultValue;
     }
-    
+
     public void Set<T>(string key, T value)
     {
         if (value == null)
@@ -47,7 +49,7 @@ public class PreferenceService : IPreferenceService
             Preferences.Remove(key);
             return;
         }
-        
+
         if (typeof(T) == typeof(string))
         {
             Preferences.Set(key, value as string);
@@ -58,12 +60,12 @@ public class PreferenceService : IPreferenceService
             Preferences.Set(key, serializedValue);
         }
     }
-    
+
     public void Remove(string key)
     {
         Preferences.Remove(key);
     }
-    
+
     public bool ContainsKey(string key)
     {
         return Preferences.ContainsKey(key);

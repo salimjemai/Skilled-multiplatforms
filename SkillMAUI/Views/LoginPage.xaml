@@ -21,12 +21,15 @@
         
         <!-- Login Form -->
         <VerticalStackLayout Grid.Row="1" Spacing="20" VerticalOptions="Center">
-            <Entry Placeholder="Email" Text="{Binding Email}" Keyboard="Email" />
-            <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" />
+            <Entry Placeholder="Email" Text="{Binding Email}" Keyboard="Email" 
+                   MaximumWidthRequest="400" HorizontalTextAlignment="Center"/>
+            <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" 
+                   MaximumWidthRequest="400" HorizontalTextAlignment="Center"/>
             
             <Button Text="Log In" Command="{Binding LoginCommand}" 
                     BackgroundColor="{DynamicResource Primary}" TextColor="White"
                     FontAttributes="Bold" CornerRadius="10" HeightRequest="50"
+                    WidthRequest="400"
                     IsEnabled="{Binding IsNotBusy}" />
                     
             <Button Text="Forgot Password?" Command="{Binding ForgotPasswordCommand}" 

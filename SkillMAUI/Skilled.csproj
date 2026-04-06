@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
 
@@ -42,6 +42,14 @@
 	  <UserSecretsId>a87ad43b-e88e-438e-9b0a-047444544b87</UserSecretsId>
   </PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-ios|AnyCPU'">
+	  <EnableSGenConc>True</EnableSGenConc>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-ios|AnyCPU'">
+	  <EnableSGenConc>True</EnableSGenConc>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
@@ -62,40 +70,41 @@
 
 	<ItemGroup>
 		<!-- Database and ORM packages -->
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0-preview.7.24405.3">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.6" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.1" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
 		
 		<!-- Authentication packages -->
-		<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.0-preview.7.24405.3" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.3.1" />
+		<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.11" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
 		
 		<!-- MVVM helpers -->
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
 		
 		<!-- Local storage for settings -->
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		
 		<!-- HTTP client for API communication -->
-		<PackageReference Include="Refit" Version="7.0.0" />
-		<PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
+		<PackageReference Include="Refit" Version="7.2.22" />
+		<PackageReference Include="Refit.HttpClientFactory" Version="7.2.22" />
 		
 		<!-- Logging -->
-		<PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
-		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.91" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Skilled.Data\Skilled.Data.csproj" />
+	  <ProjectReference Include="..\Skilled.Services\Skilled.Services.csproj" />
 	</ItemGroup>
 
 </Project>

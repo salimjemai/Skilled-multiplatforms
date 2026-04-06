@@ -23,7 +23,7 @@ public class TradeServiceService : ITradeServiceService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IPreferenceService _preferenceService;
     private readonly string _apiBaseUrl = "https://skilled-api.yourdomain.com/api"; // Replace with your API URL
-    
+
     public TradeServiceService(
         ILogger<TradeServiceService> logger,
         IHttpClientFactory httpClientFactory,
@@ -33,7 +33,7 @@ public class TradeServiceService : ITradeServiceService
         _httpClientFactory = httpClientFactory;
         _preferenceService = preferenceService;
     }
-    
+
     public async Task<List<TradeService>> GetServicesAsync()
     {
         // Use API only (mock data or API call)
@@ -58,7 +58,7 @@ public class TradeServiceService : ITradeServiceService
         }
         return new List<TradeService>();
     }
-    
+
     public async Task<List<TradeService>> GetServicesByCategoryAsync(TradeCategory category)
     {
         // Use API only (mock data or API call)
@@ -83,7 +83,7 @@ public class TradeServiceService : ITradeServiceService
         }
         return new List<TradeService>();
     }
-    
+
     public async Task<List<TradeService>> GetServicesByProviderIdAsync(Guid providerId)
     {
         // Use API only (mock data or API call)
@@ -108,7 +108,7 @@ public class TradeServiceService : ITradeServiceService
         }
         return new List<TradeService>();
     }
-    
+
     public async Task<TradeService> GetServiceAsync(Guid serviceId)
     {
         // Use API only (mock data or API call)
@@ -133,7 +133,7 @@ public class TradeServiceService : ITradeServiceService
         }
         return null;
     }
-    
+
     public async Task<bool> CreateServiceAsync(TradeService service)
     {
         try
@@ -159,7 +159,7 @@ public class TradeServiceService : ITradeServiceService
             return false;
         }
     }
-    
+
     public async Task<bool> UpdateServiceAsync(TradeService service)
     {
         try
@@ -185,7 +185,7 @@ public class TradeServiceService : ITradeServiceService
             return false;
         }
     }
-    
+
     public async Task<bool> DeleteServiceAsync(Guid serviceId)
     {
         try

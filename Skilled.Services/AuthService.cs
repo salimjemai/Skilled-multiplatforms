@@ -70,7 +70,7 @@ public class AuthService : IAuthService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IPreferenceService _preferenceService;
     private readonly string ApiBaseUrl = "https://skilled-api.yourdomain.com/api"; // Replace with your API URL
-    
+
     private const string TokenKey = "auth_token";
     private const string RefreshTokenKey = "refresh_token";
     private const string CurrentUserKey = "current_user";
@@ -103,7 +103,7 @@ public class AuthService : IAuthService
         {
             return null;
         }
-        
+
         // If not in local database, try to get from API
         try
         {
@@ -112,10 +112,10 @@ public class AuthService : IAuthService
             {
                 return null;
             }
-            
+
             var client = _httpClientFactory.CreateClient("SkilledApi");
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            
+
             var response = await client.GetAsync($"{ApiBaseUrl}/users/me");
             if (response.IsSuccessStatusCode)
             {
@@ -130,7 +130,7 @@ public class AuthService : IAuthService
         {
             _logger.LogError(ex, "Error getting user from API");
         }
-        
+
         return null;
     }
 
@@ -146,7 +146,7 @@ public class AuthService : IAuthService
         {
             // First check local database
             var user = await GetCurrentUserAsync();
-            
+
             if (user != null)
             {
                 // Using direct API connection for authentication
@@ -156,7 +156,7 @@ public class AuthService : IAuthService
                     email,
                     password
                 };
-                
+
                 var response = await client.PostAsJsonAsync($"{ApiBaseUrl}/auth/login", content);
                 if (response.IsSuccessStatusCode)
                 {
@@ -166,12 +166,12 @@ public class AuthService : IAuthService
                         _preferenceService.Set(TokenKey, authResponse.Token);
                         _preferenceService.Set(RefreshTokenKey, authResponse.RefreshToken);
                         _preferenceService.Set(CurrentUserKey, authResponse.User.Id);
-                        
+
                         return true;
                     }
                 }
             }
-            
+
             return false;
         }
         catch (Exception ex)
@@ -196,12 +196,12 @@ public class AuthService : IAuthService
         {
             // Check if user exists first
             var user = await GetCurrentUserAsync();
-            
+
             if (user != null)
             {
                 return false; // User already exists
             }
-            
+
             // Using direct API connection for registration
             var client = _httpClientFactory.CreateClient("SkilledApi");
             var content = new
@@ -212,7 +212,7 @@ public class AuthService : IAuthService
                 password,
                 role = role.ToString()
             };
-            
+
             var response = await client.PostAsJsonAsync($"{ApiBaseUrl}/auth/register", content);
             if (response.IsSuccessStatusCode)
             {
@@ -222,11 +222,11 @@ public class AuthService : IAuthService
                     _preferenceService.Set(TokenKey, authResponse.Token);
                     _preferenceService.Set(RefreshTokenKey, authResponse.RefreshToken);
                     _preferenceService.Set(CurrentUserKey, authResponse.User.Id);
-                    
+
                     return true;
                 }
             }
-            
+
             return false;
         }
         catch (Exception ex)
@@ -250,7 +250,7 @@ public class AuthService : IAuthService
                 // Call API to logout
                 var client = _httpClientFactory.CreateClient("SkilledApi");
                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                
+
                 try
                 {
                     await client.PostAsync($"{ApiBaseUrl}/auth/logout", null);
@@ -260,12 +260,12 @@ public class AuthService : IAuthService
                     _logger.LogWarning(ex, "Error calling logout API, continuing with local logout");
                 }
             }
-            
+
             // Clear local tokens and user data
             _preferenceService.Remove(TokenKey);
             _preferenceService.Remove(RefreshTokenKey);
             _preferenceService.Remove(CurrentUserKey);
-            
+
             return true;
         }
         catch (Exception ex)
@@ -286,20 +286,20 @@ public class AuthService : IAuthService
         {
             return false;
         }
-        
+
         // Validate token
         var tokenHandler = new JwtSecurityTokenHandler();
         try
         {
             var jwtToken = tokenHandler.ReadJwtToken(token);
             var expiry = jwtToken.ValidTo;
-            
+
             if (expiry < DateTime.UtcNow)
             {
                 // Token expired, try to refresh
                 return await RefreshTokenAsync();
             }
-            
+
             return true;
         }
         catch
@@ -307,7 +307,7 @@ public class AuthService : IAuthService
             return false;
         }
     }
-    
+
     private async Task<bool> RefreshTokenAsync()
     {
         var refreshToken = _preferenceService.Get<string>(RefreshTokenKey);
@@ -315,7 +315,7 @@ public class AuthService : IAuthService
         {
             return false;
         }
-        
+
         try
         {
             var client = _httpClientFactory.CreateClient("SkilledApi");
@@ -323,7 +323,7 @@ public class AuthService : IAuthService
             {
                 refreshToken
             };
-            
+
             var response = await client.PostAsJsonAsync($"{ApiBaseUrl}/auth/refresh", content);
             if (response.IsSuccessStatusCode)
             {
@@ -332,11 +332,11 @@ public class AuthService : IAuthService
                 {
                     _preferenceService.Set(TokenKey, authResponse.Token);
                     _preferenceService.Set(RefreshTokenKey, authResponse.RefreshToken);
-                    
+
                     return true;
                 }
             }
-            
+
             return false;
         }
         catch (Exception ex)
@@ -360,7 +360,7 @@ public class AuthService : IAuthService
             {
                 email
             };
-            
+
             var response = await client.PostAsJsonAsync($"{ApiBaseUrl}/auth/reset-password", content);
             return response.IsSuccessStatusCode;
         }
@@ -385,10 +385,10 @@ public class AuthService : IAuthService
             {
                 return false;
             }
-            
+
             var client = _httpClientFactory.CreateClient("SkilledApi");
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            
+
             var response = await client.PutAsJsonAsync($"{ApiBaseUrl}/users/{user.Id}", user);
             if (response.IsSuccessStatusCode)
             {
@@ -398,7 +398,7 @@ public class AuthService : IAuthService
                     return true;
                 }
             }
-            
+
             return false;
         }
         catch (Exception ex)

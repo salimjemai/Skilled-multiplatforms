@@ -16,22 +16,22 @@
             <!-- Registration Form -->
             <VerticalStackLayout Spacing="15">
                 <!-- Name -->
-                <Entry Placeholder="Full Name" x:Name="NameEntry" />
+                <Entry Placeholder="Full Name" x:Name="NameEntry" MaximumWidthRequest="400" HorizontalTextAlignment="Start"/>
                 
                 <!-- Email -->
-                <Entry Placeholder="Email Address" Keyboard="Email" x:Name="EmailEntry" />
+                <Entry Placeholder="Email Address" Keyboard="Email" x:Name="EmailEntry" MaximumWidthRequest="400" HorizontalTextAlignment="Start"/>
                 
                 <!-- Phone -->
-                <Entry Placeholder="Phone Number" Keyboard="Telephone" x:Name="PhoneEntry" />
+                <Entry Placeholder="Phone Number" Keyboard="Telephone" x:Name="PhoneEntry" MaximumWidthRequest="400" HorizontalTextAlignment="Start"/>
                 
                 <!-- Password -->
-                <Entry Placeholder="Password" IsPassword="True" x:Name="PasswordEntry" />
+                <Entry Placeholder="Password" IsPassword="True" x:Name="PasswordEntry" MaximumWidthRequest="400" HorizontalTextAlignment="Start"/>
                 
                 <!-- Confirm Password -->
-                <Entry Placeholder="Confirm Password" IsPassword="True" x:Name="ConfirmPasswordEntry" />
+                <Entry Placeholder="Confirm Password" IsPassword="True" x:Name="ConfirmPasswordEntry" MaximumWidthRequest="400" HorizontalTextAlignment="Start"/>
                 
                 <!-- User Type Selection -->
-                <Label Text="I am a:" FontSize="16" FontAttributes="Bold" />
+                <Label Text="I am a:" FontSize="16" FontAttributes="Bold" HorizontalTextAlignment="Start"/>
                 <HorizontalStackLayout Spacing="10">
                     <RadioButton Content="Customer" IsChecked="{Binding IsCustomer}" GroupName="UserType" />
                     <RadioButton Content="Service Provider" IsChecked="{Binding IsProvider}" GroupName="UserType" />
@@ -40,7 +40,7 @@
                 <!-- Terms and Conditions -->
                 <HorizontalStackLayout Spacing="10">
                     <CheckBox IsChecked="{Binding AgreeToTerms}" />
-                    <Label Text="I agree to the Terms of Service and Privacy Policy" FontSize="12" />
+                    <Label Text="I agree to the Terms of Service and Privacy Policy" FontSize="12" HorizontalTextAlignment="Center" />
                 </HorizontalStackLayout>
             </VerticalStackLayout>
 
@@ -48,6 +48,7 @@
             <Button Text="Create Account" 
                    BackgroundColor="Blue" 
                    TextColor="White" 
+                   WidthRequest="400"
                    CornerRadius="10" 
                    Padding="20"
                    Command="{Binding RegisterCommand}" />

@@ -20,7 +20,7 @@ public class UserService : IUserService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IPreferenceService _preferenceService;
     private readonly string _apiBaseUrl = "https://skilled-api.yourdomain.com/api"; // Replace with your API URL
-    
+
     public UserService(
         ILogger<UserService> logger,
         IHttpClientFactory httpClientFactory,
@@ -30,7 +30,7 @@ public class UserService : IUserService
         _httpClientFactory = httpClientFactory;
         _preferenceService = preferenceService;
     }
-    
+
     public async Task<User> GetUserAsync(Guid userId)
     {
         // Use API only (mock data or API call)
@@ -56,7 +56,7 @@ public class UserService : IUserService
         }
         return null;
     }
-    
+
     public async Task<List<User>> GetServiceProvidersAsync()
     {
         // Use API only (mock data or API call)
@@ -81,7 +81,7 @@ public class UserService : IUserService
         }
         return new List<User>();
     }
-    
+
     public async Task<List<User>> GetServiceProvidersByCategoryAsync(TradeCategory category)
     {
         // Use API only (mock data or API call)
@@ -106,7 +106,7 @@ public class UserService : IUserService
         }
         return new List<User>();
     }
-    
+
     public async Task<bool> UpdateUserAsync(User user)
     {
         try
