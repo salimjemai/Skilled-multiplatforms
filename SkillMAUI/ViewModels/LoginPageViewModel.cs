@@ -49,7 +49,7 @@ public partial class LoginPageViewModel : ObservableObject
             var result = await _authService.LoginAsync(Email, Password);
             if (result)
             {
-                // Navigate to home page
+                // Navigate to main tabs — matches the TabBar Route="MainTabs" and ShellContent Route="HomePage"
                 await Shell.Current.GoToAsync("//MainTabs/HomePage");
             }
             else

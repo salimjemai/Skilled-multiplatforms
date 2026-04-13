@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- Disable code signing for local development -->
+    <EnableCodeSigning>false</EnableCodeSigning>
+    <_CodeSigningAllowed>false</_CodeSigningAllowed>
+  </PropertyGroup>
+</Project>

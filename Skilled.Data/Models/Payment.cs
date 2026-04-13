@@ -28,33 +28,38 @@ public enum PaymentMethod
 public class Payment
 {
     public Guid Id { get; set; }
+
     public Guid UserId { get; set; }
     public Guid ProviderId { get; set; }
+
+    /// <summary>Link to the booking this payment covers.</summary>
+    public Guid? BookingId { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
     public decimal Amount { get; set; }
-    public DateTime Date { get; set; }
-    public string Status { get; set; } = string.Empty;
-    
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal RefundAmount { get; set; } = 0;
+
+    public DateTime Date { get; set; } = DateTime.UtcNow;
+
+    public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
+
     [Required]
     public PaymentMethod Method { get; set; }
-    
+
+    [MaxLength(100)]
     public string? TransactionId { get; set; }
-    
+
     [MaxLength(500)]
     public string? Notes { get; set; }
-    
+
     public DateTime? CompletedAt { get; set; }
-    
-    // Navigation properties
-    [ForeignKey("UserId")]
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // ── Navigation properties ────────────────────────────────────────────────
     public virtual User? User { get; set; }
-    
-    [ForeignKey("ProviderId")]
-    public virtual User? Provider { get; set; }
-    
-    public Payment()
-    {
-        Id = Guid.NewGuid();
-        Status = PaymentStatus.Pending.ToString();
-        Date = DateTime.UtcNow;
-    }
+    public virtual ServiceProvider? Provider { get; set; }
+    public virtual Booking? Booking { get; set; }
 }

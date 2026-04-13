@@ -1,16 +1,19 @@
-using Skilled.Data.Models;
 using Skilled.ViewModels;
 
 namespace Skilled.Views;
 
 public partial class MessagesPage : ContentPage
 {
-    private MessagesViewModel _viewModel;
+    private readonly MessagesViewModel _viewModel;
 
-    public MessagesPage()
+    public MessagesPage() : this(ServiceHelper.GetRequiredService<MessagesViewModel>())
+    {
+    }
+
+    public MessagesPage(MessagesViewModel viewModel)
     {
         InitializeComponent();
-        _viewModel = new MessagesViewModel();
+        _viewModel = viewModel;
         BindingContext = _viewModel;
     }
 
@@ -20,21 +23,15 @@ public partial class MessagesPage : ContentPage
         await _viewModel.LoadDataAsync();
     }
 
-    private async void OnProviderSelected(object sender, SelectionChangedEventArgs e)
-    {
-        if (e.CurrentSelection.FirstOrDefault() is User provider)
-        {
-            // Start a new chat with the selected provider
-            await Shell.Current.GoToAsync($"//ChatPage?userId={provider.Id}&name={provider.FirstName} {provider.LastName}");
-        }
-    }
-
     private async void OnChatSelected(object sender, SelectionChangedEventArgs e)
     {
-        if (e.CurrentSelection.FirstOrDefault() is ChatPreview chat)
+        if (e.CurrentSelection.FirstOrDefault() is ChatPreviewDisplayItem chat)
         {
-            // Navigate to existing chat
-            await Shell.Current.GoToAsync($"//ChatPage?userId={chat.UserId}&name={chat.Name}");
+            // Navigate to conversation
+            await Shell.Current.GoToAsync(
+                $"{nameof(ServiceDetailPage)}?userId={chat.OtherUserId}&name={Uri.EscapeDataString(chat.Name)}");
         }
+        // Clear selection so the item can be tapped again
+        ((CollectionView)sender).SelectedItem = null;
     }
-} 
+}

@@ -33,11 +33,11 @@
                     <VerticalStackLayout Spacing="15">
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="Payment Methods" VerticalOptions="Center" />
-                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                            <Label Grid.Column="1" Text=">" FontSize="18" TextColor="Gray" VerticalOptions="Center" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="Booking History" VerticalOptions="Center" />
-                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                            <Label Grid.Column="1" Text=">" FontSize="18" TextColor="Gray" VerticalOptions="Center" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="Notifications" VerticalOptions="Center" />
@@ -54,19 +54,19 @@
                     <VerticalStackLayout Spacing="15">
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="Help &amp; Support" VerticalOptions="Center" />
-                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                            <Label Grid.Column="1" Text=">" FontSize="18" TextColor="Gray" VerticalOptions="Center" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="Privacy Policy" VerticalOptions="Center" />
-                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                            <Label Grid.Column="1" Text=">" FontSize="18" TextColor="Gray" VerticalOptions="Center" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="Terms of Service" VerticalOptions="Center" />
-                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                            <Label Grid.Column="1" Text=">" FontSize="18" TextColor="Gray" VerticalOptions="Center" />
                         </Grid>
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" Text="About Us" VerticalOptions="Center" />
-                            <Image Grid.Column="1" Source="chevron_right.png" HeightRequest="20" WidthRequest="20" />
+                            <Label Grid.Column="1" Text=">" FontSize="18" TextColor="Gray" VerticalOptions="Center" />
                         </Grid>
                     </VerticalStackLayout>
                 </Frame>

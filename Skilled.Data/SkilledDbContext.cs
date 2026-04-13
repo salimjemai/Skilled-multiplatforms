@@ -5,13 +5,14 @@ namespace Skilled.Data;
 
 public class SkilledDbContext : DbContext
 {
-    public SkilledDbContext(DbContextOptions<SkilledDbContext> options) : base(options)
-    {
-    }
+    public SkilledDbContext(DbContextOptions<SkilledDbContext> options) : base(options) { }
 
+    // ── DbSets ───────────────────────────────────────────────────────────────
     public DbSet<User> Users { get; set; }
     public DbSet<ServiceProvider> ServiceProviders { get; set; }
     public DbSet<TradeService> TradeServices { get; set; }
+    public DbSet<ServicePricing> ServicePricings { get; set; }
+    public DbSet<CostRange> CostRanges { get; set; }
     public DbSet<TradeCategory> TradeCategories { get; set; }
     public DbSet<Booking> Bookings { get; set; }
     public DbSet<Payment> Payments { get; set; }
@@ -23,176 +24,246 @@ public class SkilledDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // Set the default schema for all entities
         modelBuilder.HasDefaultSchema("skilled_db");
 
-        // Configure User entity
-        modelBuilder.Entity<User>(entity =>
+        // ── User ─────────────────────────────────────────────────────────────
+        modelBuilder.Entity<User>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
-            entity.HasIndex(e => e.Email).IsUnique();
+            e.HasKey(u => u.Id);
+            e.Property(u => u.Id).ValueGeneratedOnAdd();
+            e.Property(u => u.Email).IsRequired().HasMaxLength(255);
+            e.Property(u => u.FirstName).IsRequired().HasMaxLength(100);
+            e.Property(u => u.LastName).IsRequired().HasMaxLength(100);
+            e.Property(u => u.Role).HasConversion<string>().HasMaxLength(20);
+            e.Property(u => u.PhoneNumber).HasMaxLength(20);
+            e.Property(u => u.ProfileImageUrl).HasMaxLength(500);
+            e.Property(u => u.Bio).HasMaxLength(500);
+            e.HasIndex(u => u.Email).IsUnique();
         });
 
-        // Configure ServiceProvider entity
-        modelBuilder.Entity<ServiceProvider>(entity =>
+        // ── Location ──────────────────────────────────────────────────────────
+        modelBuilder.Entity<Location>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.Phone).HasMaxLength(20);
-            entity.HasIndex(e => e.Email).IsUnique();
+            e.HasKey(l => l.Id);
+            e.Property(l => l.Id).ValueGeneratedOnAdd();
+            e.Property(l => l.Address).IsRequired().HasMaxLength(255);
+            e.Property(l => l.City).IsRequired().HasMaxLength(100);
+            e.Property(l => l.State).IsRequired().HasMaxLength(100);
+            e.Property(l => l.ZipCode).HasMaxLength(20);
+            e.Property(l => l.Country).IsRequired().HasMaxLength(100);
         });
 
-        // Configure TradeService entity
-        modelBuilder.Entity<TradeService>(entity =>
+        // ── ServiceProvider ───────────────────────────────────────────────────
+        modelBuilder.Entity<ServiceProvider>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Description).HasMaxLength(1000);
-            entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Pricing).HasMaxLength(100);
-            
-            // Foreign key relationship
-            entity.HasOne<ServiceProvider>()
-                .WithMany()
-                .HasForeignKey(e => e.ProviderId)
-                .OnDelete(DeleteBehavior.Cascade);
+            e.HasKey(p => p.Id);
+            e.Property(p => p.Id).ValueGeneratedOnAdd();
+            e.Property(p => p.BusinessName).IsRequired().HasMaxLength(200);
+            e.Property(p => p.Name).HasMaxLength(200);
+            e.Property(p => p.Email).HasMaxLength(255);
+            e.Property(p => p.Phone).HasMaxLength(20);
+            e.Property(p => p.Description).HasMaxLength(1000);
+            e.Property(p => p.ProfileImageUrl).HasMaxLength(500);
+            e.Property(p => p.AverageRating).HasColumnType("decimal(3,2)");
+
+            // One-to-one: User → ServiceProvider
+            e.HasOne(p => p.User)
+             .WithOne(u => u.ProviderProfile)
+             .HasForeignKey<ServiceProvider>(p => p.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            // Many-to-one: ServiceProvider → Location
+            e.HasOne(p => p.Location)
+             .WithMany(l => l.ServiceProviders)
+             .HasForeignKey(p => p.LocationId)
+             .OnDelete(DeleteBehavior.SetNull)
+             .IsRequired(false);
         });
 
-        // Configure TradeCategory entity
-        modelBuilder.Entity<TradeCategory>(entity =>
+        // ── TradeCategory ─────────────────────────────────────────────────────
+        modelBuilder.Entity<TradeCategory>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.Icon).HasMaxLength(100);
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Id).ValueGeneratedOnAdd();
+            e.Property(c => c.Name).IsRequired().HasMaxLength(100);
+            e.Property(c => c.Description).HasMaxLength(500);
+            e.Property(c => c.Icon).HasMaxLength(100);
         });
 
-        // Configure Booking entity
-        modelBuilder.Entity<Booking>(entity =>
+        // ── TradeService ──────────────────────────────────────────────────────
+        modelBuilder.Entity<TradeService>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.Status).HasConversion<string>();
-            
-            // Foreign key relationships
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-                
-            entity.HasOne<ServiceProvider>()
-                .WithMany()
-                .HasForeignKey(e => e.ProviderId)
-                .OnDelete(DeleteBehavior.Cascade);
-                
-            entity.HasOne<TradeService>()
-                .WithMany()
-                .HasForeignKey(e => e.ServiceId)
-                .OnDelete(DeleteBehavior.Cascade);
+            e.HasKey(s => s.Id);
+            e.Property(s => s.Id).ValueGeneratedOnAdd();
+            e.Property(s => s.Name).IsRequired().HasMaxLength(200);
+            e.Property(s => s.Description).HasMaxLength(1000);
+            e.Property(s => s.Category).HasMaxLength(100);
+
+            // Many-to-one: TradeService → ServiceProvider
+            e.HasOne(s => s.Provider)
+             .WithMany(p => p.Services)
+             .HasForeignKey(s => s.ProviderId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            // Many-to-one: TradeService → TradeCategory
+            e.HasOne(s => s.TradeCategory)
+             .WithMany(c => c.Services)
+             .HasForeignKey(s => s.CategoryId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Configure Payment entity
-        modelBuilder.Entity<Payment>(entity =>
+        // ── ServicePricing ────────────────────────────────────────────────────
+        modelBuilder.Entity<ServicePricing>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
-            
-            // Foreign key relationships
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-                
-            entity.HasOne<ServiceProvider>()
-                .WithMany()
-                .HasForeignKey(e => e.ProviderId)
-                .OnDelete(DeleteBehavior.Cascade);
+            e.HasKey(p => p.Id);
+            e.Property(p => p.BasePrice).HasColumnType("decimal(18,2)");
+            e.Property(p => p.HourlyRate).HasColumnType("decimal(18,2)");
+            e.Property(p => p.MinimumFee).HasColumnType("decimal(18,2)");
+            e.Property(p => p.PricingType).HasConversion<string>();
+
+            // One-to-one: TradeService → ServicePricing
+            e.HasOne(p => p.TradeService)
+             .WithOne(s => s.Pricing)
+             .HasForeignKey<ServicePricing>(p => p.TradeServiceId)
+             .OnDelete(DeleteBehavior.Cascade)
+             .IsRequired(false);
         });
 
-        // Configure Review entity
-        modelBuilder.Entity<Review>(entity =>
+        // ── CostRange ─────────────────────────────────────────────────────────
+        modelBuilder.Entity<CostRange>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Rating).IsRequired();
-            entity.Property(e => e.Comment).HasMaxLength(1000);
-            
-            // Foreign key relationships
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-                
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.ProviderUserId)
-                .OnDelete(DeleteBehavior.Cascade);
-                
-            entity.HasOne<TradeService>()
-                .WithMany()
-                .HasForeignKey(e => e.ServiceId)
-                .OnDelete(DeleteBehavior.Cascade);
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Minimum).HasColumnType("decimal(18,2)");
+            e.Property(c => c.Maximum).HasColumnType("decimal(18,2)");
+
+            // One-to-one: ServicePricing → CostRange
+            e.HasOne(c => c.ServicePricing)
+             .WithOne(p => p.EstimatedCostRange)
+             .HasForeignKey<CostRange>(c => c.ServicePricingId)
+             .OnDelete(DeleteBehavior.Cascade)
+             .IsRequired(false);
         });
 
-        // Configure ChatMessage entity
-        modelBuilder.Entity<ChatMessage>(entity =>
+        // ── Booking ───────────────────────────────────────────────────────────
+        modelBuilder.Entity<Booking>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Message).IsRequired().HasMaxLength(1000);
-            entity.Property(e => e.SentAt).IsRequired();
-            entity.Property(e => e.IsRead).IsRequired();
-            
-            // Foreign key relationships
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.SenderId)
-                .OnDelete(DeleteBehavior.Cascade);
-                
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.ReceiverId)
-                .OnDelete(DeleteBehavior.Cascade);
+            e.HasKey(b => b.Id);
+            e.Property(b => b.Id).ValueGeneratedOnAdd();
+            e.Property(b => b.TotalAmount).HasColumnType("decimal(18,2)");
+            e.Property(b => b.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(b => b.Notes).HasMaxLength(1000);
+
+            e.HasOne(b => b.User)
+             .WithMany(u => u.Bookings)
+             .HasForeignKey(b => b.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(b => b.Provider)
+             .WithMany(p => p.Bookings)
+             .HasForeignKey(b => b.ProviderId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(b => b.Service)
+             .WithMany(s => s.Bookings)
+             .HasForeignKey(b => b.ServiceId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Configure ChatPreview entity
-        modelBuilder.Entity<ChatPreview>(entity =>
+        // ── Payment ───────────────────────────────────────────────────────────
+        modelBuilder.Entity<Payment>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.LastMessage).HasMaxLength(500);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.ProfileImage).HasMaxLength(255);
-            
-            // Foreign key relationship
-            entity.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+            e.HasKey(p => p.Id);
+            e.Property(p => p.Id).ValueGeneratedOnAdd();
+            e.Property(p => p.Amount).HasColumnType("decimal(18,2)");
+            e.Property(p => p.RefundAmount).HasColumnType("decimal(18,2)");
+            e.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(p => p.TransactionId).HasMaxLength(100);
+            e.Property(p => p.Notes).HasMaxLength(500);
+
+            e.HasOne(p => p.User)
+             .WithMany()
+             .HasForeignKey(p => p.UserId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(p => p.Provider)
+             .WithMany(sp => sp.Payments)
+             .HasForeignKey(p => p.ProviderId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            // One-to-one: Booking → Payment
+            e.HasOne(p => p.Booking)
+             .WithOne(b => b.Payment)
+             .HasForeignKey<Payment>(p => p.BookingId)
+             .OnDelete(DeleteBehavior.SetNull)
+             .IsRequired(false);
         });
 
-        // Configure Location entity
-        modelBuilder.Entity<Location>(entity =>
+        // ── Review ────────────────────────────────────────────────────────────
+        modelBuilder.Entity<Review>(e =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.Address).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.City).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.State).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.ZipCode).HasMaxLength(20);
-            entity.Property(e => e.Country).IsRequired().HasMaxLength(100);
+            e.HasKey(r => r.Id);
+            e.Property(r => r.Id).ValueGeneratedOnAdd();
+            e.Property(r => r.Comment).HasMaxLength(1000);
+
+            e.HasOne(r => r.User)
+             .WithMany(u => u.ReviewsWritten)
+             .HasForeignKey(r => r.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(r => r.Provider)
+             .WithMany(p => p.Reviews)
+             .HasForeignKey(r => r.ProviderId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.Service)
+             .WithMany(s => s.Reviews)
+             .HasForeignKey(r => r.ServiceId)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(r => r.Booking)
+             .WithMany(b => b.Reviews)
+             .HasForeignKey(r => r.BookingId)
+             .OnDelete(DeleteBehavior.SetNull)
+             .IsRequired(false);
+        });
+
+        // ── ChatMessage ───────────────────────────────────────────────────────
+        modelBuilder.Entity<ChatMessage>(e =>
+        {
+            e.HasKey(m => m.Id);
+            e.Property(m => m.Id).ValueGeneratedOnAdd();
+            e.Property(m => m.Message).IsRequired().HasMaxLength(2000);
+            e.Property(m => m.MessageType).HasConversion<string>();
+
+            e.HasOne(m => m.Sender)
+             .WithMany(u => u.SentMessages)
+             .HasForeignKey(m => m.SenderId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(m => m.Receiver)
+             .WithMany(u => u.ReceivedMessages)
+             .HasForeignKey(m => m.ReceiverId)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── ChatPreview ───────────────────────────────────────────────────────
+        modelBuilder.Entity<ChatPreview>(e =>
+        {
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Id).ValueGeneratedOnAdd();
+            e.Property(c => c.LastMessage).HasMaxLength(500);
+            e.Property(c => c.Name).IsRequired().HasMaxLength(200);
+            e.Property(c => c.ProfileImage).HasMaxLength(500);
+
+            e.HasOne(c => c.User)
+             .WithMany(u => u.ChatPreviews)
+             .HasForeignKey(c => c.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(c => c.OtherUser)
+             .WithMany()
+             .HasForeignKey(c => c.OtherUserId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

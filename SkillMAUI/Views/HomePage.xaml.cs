@@ -5,12 +5,16 @@ namespace Skilled.Views;
 
 public partial class HomePage : ContentPage
 {
-    private HomeViewModel _viewModel;
+    private readonly HomeViewModel _viewModel;
 
-    public HomePage()
+    public HomePage() : this(ServiceHelper.GetRequiredService<HomeViewModel>())
+    {
+    }
+
+    public HomePage(HomeViewModel viewModel)
     {
         InitializeComponent();
-        _viewModel = new HomeViewModel();
+        _viewModel = viewModel;
         BindingContext = _viewModel;
     }
 
@@ -24,17 +28,19 @@ public partial class HomePage : ContentPage
     {
         if (e.CurrentSelection.FirstOrDefault() is TradeCategory category)
         {
-            // Navigate to service list page with selected category
-            await Shell.Current.GoToAsync($"//ServiceListPage?category={category.Name}");
+            await Shell.Current.GoToAsync(
+                $"{nameof(ServiceListPage)}?categoryId={category.Id}&categoryName={Uri.EscapeDataString(category.Name)}");
         }
+        ((CollectionView)sender).SelectedItem = null;
     }
 
     private async void OnProviderSelected(object sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection.FirstOrDefault() is Skilled.Data.Models.ServiceProvider provider)
         {
-            // Navigate to service provider detail page
-            await Shell.Current.GoToAsync($"//ServiceDetailPage?providerId={provider.Id}");
+            await Shell.Current.GoToAsync(
+                $"{nameof(ServiceDetailPage)}?providerId={provider.Id}");
         }
+        ((CollectionView)sender).SelectedItem = null;
     }
-} 
+}

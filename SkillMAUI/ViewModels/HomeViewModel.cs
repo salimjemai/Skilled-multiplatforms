@@ -1,103 +1,80 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Skilled.Data.Models;
+using Skilled.Services;
 using System.Collections.ObjectModel;
 
 namespace Skilled.ViewModels;
 
 public partial class HomeViewModel : ObservableObject
 {
-    [ObservableProperty]
-    private ObservableCollection<TradeCategory> _categories;
+    private readonly ITradeServiceService _tradeServiceService;
+    private readonly IUserService _userService;
+    private readonly ILogger<HomeViewModel> _logger;
 
     [ObservableProperty]
-    private ObservableCollection<Skilled.Data.Models.ServiceProvider> _featuredProviders;
+    private ObservableCollection<TradeCategory> _categories = new();
+
+    [ObservableProperty]
+    private ObservableCollection<Skilled.Data.Models.ServiceProvider> _featuredProviders = new();
 
     [ObservableProperty]
     private bool _isLoading;
 
-    public HomeViewModel()
+    [ObservableProperty]
+    private string _errorMessage = string.Empty;
+
+    public HomeViewModel(
+        ITradeServiceService tradeServiceService,
+        IUserService userService,
+        ILogger<HomeViewModel> logger)
     {
-        _categories = new ObservableCollection<TradeCategory>();
-        _featuredProviders = new ObservableCollection<Skilled.Data.Models.ServiceProvider>();
+        _tradeServiceService = tradeServiceService;
+        _userService = userService;
+        _logger = logger;
     }
 
     [RelayCommand]
     public async Task LoadDataAsync()
     {
         IsLoading = true;
-        
+        ErrorMessage = string.Empty;
+
         try
         {
-            LoadDefaultCategories();
-            LoadMockProviders();
+            // Load categories from API
+            var categories = await _tradeServiceService.GetCategoriesAsync();
+            Categories.Clear();
+            foreach (var c in categories)
+                Categories.Add(c);
+
+            // Load featured providers from API
+            var providers = await _userService.GetServiceProvidersAsync();
+            FeaturedProviders.Clear();
+            // The API returns User objects for the legacy endpoint;
+            // the providers endpoint now returns ServiceProvider objects via the typed call.
+            foreach (var p in providers.Take(10))
+            {
+                // Map User → lightweight ServiceProvider for display
+                FeaturedProviders.Add(new Skilled.Data.Models.ServiceProvider
+                {
+                    Id = p.Id,
+                    BusinessName = p.FullName,
+                    Name = p.FullName,
+                    ProfileImageUrl = p.ProfileImageUrl
+                });
+            }
         }
         catch (Exception ex)
         {
-            // Handle error
-            await Shell.Current.DisplayAlert("Error", "Failed to load data", "OK");
+            _logger.LogError(ex, "Failed to load home data");
+            ErrorMessage = "Failed to load data. Please check your connection.";
+            await Shell.Current.DisplayAlert("Error", ErrorMessage, "OK");
         }
         finally
         {
             IsLoading = false;
         }
     }
-
-    private void LoadDefaultCategories()
-    {
-        Categories.Clear();
-        var defaultCategories = new[]
-        {
-            new TradeCategory { Id = Guid.NewGuid(), Name = "Plumbing", Icon = "plumbing.png" },
-            new TradeCategory { Id = Guid.NewGuid(), Name = "Electrical", Icon = "electrical.png" },
-            new TradeCategory { Id = Guid.NewGuid(), Name = "Carpentry", Icon = "carpentry.png" },
-            new TradeCategory { Id = Guid.NewGuid(), Name = "Painting", Icon = "painting.png" },
-            new TradeCategory { Id = Guid.NewGuid(), Name = "Landscaping", Icon = "landscaping.png" },
-            new TradeCategory { Id = Guid.NewGuid(), Name = "HVAC", Icon = "hvac.png" },
-            new TradeCategory { Id = Guid.NewGuid(), Name = "Cleaning", Icon = "cleaning.png" },
-            new TradeCategory { Id = Guid.NewGuid(), Name = "Handyman", Icon = "handyman.png" }
-        };
-
-        foreach (var category in defaultCategories)
-        {
-            Categories.Add(category);
-        }
-    }
-
-    private void LoadMockProviders()
-    {
-        FeaturedProviders.Clear();
-        var mockProviders = new[]
-        {
-            new Skilled.Data.Models.ServiceProvider
-            {
-                Id = Guid.NewGuid(),
-                Name = "Mike's Plumbing",
-                Description = "Professional plumbing services with 15 years experience",
-                Email = "mike@plumbing.com",
-                Phone = "(555) 123-4567"
-            },
-            new Skilled.Data.Models.ServiceProvider
-            {
-                Id = Guid.NewGuid(),
-                Name = "ElectraPro",
-                Description = "Licensed electricians for residential and commercial work",
-                Email = "info@electrapro.com",
-                Phone = "(555) 234-5678"
-            },
-            new Skilled.Data.Models.ServiceProvider
-            {
-                Id = Guid.NewGuid(),
-                Name = "Green Landscapes",
-                Description = "Complete landscaping solutions for beautiful yards",
-                Email = "contact@greenlandscapes.com",
-                Phone = "(555) 345-6789"
-            }
-        };
-
-        foreach (var provider in mockProviders)
-        {
-            FeaturedProviders.Add(provider);
-        }
-    }
-} 
+}

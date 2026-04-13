@@ -1,122 +1,104 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Skilled.Data.Models;
+using Skilled.Services;
 using System.Collections.ObjectModel;
+using System.Net.Http.Json;
 
 namespace Skilled.ViewModels;
 
 public partial class MessagesViewModel : ObservableObject
 {
-    [ObservableProperty]
-    private ObservableCollection<User> _serviceProviders;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IPreferenceService _preferenceService;
+    private readonly ILogger<MessagesViewModel> _logger;
 
     [ObservableProperty]
-    private ObservableCollection<ChatPreview> _chatPreviews;
+    private ObservableCollection<ChatPreviewDisplayItem> _chatPreviews = new();
 
     [ObservableProperty]
     private bool _isLoading;
 
-    public MessagesViewModel()
+    public MessagesViewModel(
+        IHttpClientFactory httpClientFactory,
+        IPreferenceService preferenceService,
+        ILogger<MessagesViewModel> logger)
     {
-        _serviceProviders = new ObservableCollection<User>();
-        _chatPreviews = new ObservableCollection<ChatPreview>();
+        _httpClientFactory = httpClientFactory;
+        _preferenceService = preferenceService;
+        _logger = logger;
     }
 
     [RelayCommand]
     public async Task LoadDataAsync()
     {
         IsLoading = true;
-        
         try
         {
-            LoadMockProviders();
-            LoadMockChatPreviews();
+            var token = _preferenceService.Get<string>("auth_token");
+            if (string.IsNullOrEmpty(token))
+                return;
+
+            var client = _httpClientFactory.CreateClient("SkilledApi");
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await client.GetAsync("api/messages/chats");
+            if (response.IsSuccessStatusCode)
+            {
+                var chats = await response.Content.ReadFromJsonAsync<List<ChatPreviewApiDto>>()
+                            ?? new List<ChatPreviewApiDto>();
+
+                ChatPreviews.Clear();
+                foreach (var c in chats)
+                {
+                    ChatPreviews.Add(new ChatPreviewDisplayItem
+                    {
+                        Id = c.Id,
+                        OtherUserId = c.OtherUserId,
+                        Name = c.Name,
+                        ProfileImage = c.ProfileImage,
+                        LastMessage = c.LastMessage,
+                        Timestamp = c.LastMessageTime,
+                        UnreadCount = c.UnreadCount
+                    });
+                }
+            }
         }
         catch (Exception ex)
         {
-            // Handle error
-            await Shell.Current.DisplayAlert("Error", "Failed to load messages", "OK");
+            _logger.LogError(ex, "Error loading chat previews");
+            await Shell.Current.DisplayAlert("Error", "Failed to load messages.", "OK");
         }
         finally
         {
             IsLoading = false;
         }
     }
+}
 
-    private void LoadMockProviders()
-    {
-        ServiceProviders.Clear();
-        var mockProviders = new[]
-        {
-            new User
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "John",
-                LastName = "Smith",
-                ProfileImageUrl = "provider1.png"
-            },
-            new User
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "Sarah",
-                LastName = "Johnson",
-                ProfileImageUrl = "provider2.png"
-            },
-            new User
-            {
-                Id = Guid.NewGuid(),
-                FirstName = "Mike",
-                LastName = "Brown",
-                ProfileImageUrl = "provider3.png"
-            }
-        };
+/// <summary>Display model for the messages list — all properties the XAML binds to.</summary>
+public class ChatPreviewDisplayItem
+{
+    public Guid Id { get; set; }
+    public Guid OtherUserId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string ProfileImage { get; set; } = string.Empty;
+    public string LastMessage { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public int UnreadCount { get; set; }
+    public bool HasUnreadMessages => UnreadCount > 0;
+}
 
-        foreach (var provider in mockProviders)
-        {
-            ServiceProviders.Add(provider);
-        }
-    }
-
-    private void LoadMockChatPreviews()
-    {
-        ChatPreviews.Clear();
-        var mockChats = new[]
-        {
-            new ChatPreview
-            {
-                Id = Guid.NewGuid(),
-                UserId = Guid.NewGuid(),
-                Name = "John Smith",
-                LastMessage = "I'll be there at 2pm",
-                Timestamp = DateTime.Now,
-                UnreadCount = 2,
-                ProfileImage = "provider1.png"
-            },
-            new ChatPreview
-            {
-                Id = Guid.NewGuid(),
-                UserId = Guid.NewGuid(),
-                Name = "Sarah Johnson",
-                LastMessage = "The quote looks good",
-                Timestamp = DateTime.Now.AddHours(-1),
-                UnreadCount = 0,
-                ProfileImage = "provider2.png"
-            },
-            new ChatPreview
-            {
-                Id = Guid.NewGuid(),
-                UserId = Guid.NewGuid(),
-                Name = "Mike Brown",
-                LastMessage = "Can you come earlier?",
-                Timestamp = DateTime.Now.AddHours(-2),
-                UnreadCount = 1,
-                ProfileImage = "provider3.png"
-            }
-        };
-
-        foreach (var chat in mockChats)
-        {
-            ChatPreviews.Add(chat);
-        }
-    }
-} 
+/// <summary>Matches the API ChatPreviewDto shape.</summary>
+public class ChatPreviewApiDto
+{
+    public Guid Id { get; set; }
+    public Guid OtherUserId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string ProfileImage { get; set; } = string.Empty;
+    public string LastMessage { get; set; } = string.Empty;
+    public DateTime LastMessageTime { get; set; }
+    public int UnreadCount { get; set; }
+}

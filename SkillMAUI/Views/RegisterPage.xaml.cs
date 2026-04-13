@@ -4,12 +4,13 @@ namespace Skilled.Views;
 
 public partial class RegisterPage : ContentPage
 {
-    private RegisterViewModel _viewModel;
+    public RegisterPage() : this(ServiceHelper.GetRequiredService<RegisterViewModel>())
+    {
+    }
 
-    public RegisterPage()
+    public RegisterPage(RegisterViewModel viewModel)
     {
         InitializeComponent();
-        _viewModel = new RegisterViewModel();
-        BindingContext = _viewModel;
+        BindingContext = viewModel;
     }
-} 
+}

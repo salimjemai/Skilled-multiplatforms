@@ -1,14 +1,22 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Skilled.Data.Models;
+using Skilled.Services;
 using System.Collections.ObjectModel;
+using System.Net.Http.Json;
 
 namespace Skilled.ViewModels;
 
 public partial class BookingsViewModel : ObservableObject
 {
+    private readonly IAuthService _authService;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IPreferenceService _preferenceService;
+    private readonly ILogger<BookingsViewModel> _logger;
+
     [ObservableProperty]
-    private ObservableCollection<Booking> _bookings;
+    private ObservableCollection<BookingDisplayItem> _bookings = new();
 
     [ObservableProperty]
     private bool _isLoading;
@@ -22,24 +30,66 @@ public partial class BookingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isEmpty = false;
 
-    public BookingsViewModel()
+    public BookingsViewModel(
+        IAuthService authService,
+        IHttpClientFactory httpClientFactory,
+        IPreferenceService preferenceService,
+        ILogger<BookingsViewModel> logger)
     {
-        _bookings = new ObservableCollection<Booking>();
+        _authService = authService;
+        _httpClientFactory = httpClientFactory;
+        _preferenceService = preferenceService;
+        _logger = logger;
     }
 
     [RelayCommand]
     public async Task LoadBookingsAsync()
     {
         IsLoading = true;
-        
         try
         {
-            LoadMockBookings();
+            var token = _preferenceService.Get<string>("auth_token");
+            if (string.IsNullOrEmpty(token))
+            {
+                IsEmpty = true;
+                return;
+            }
+
+            var statusFilter = IsUpcomingSelected
+                ? "Confirmed"
+                : "Completed";
+
+            var client = _httpClientFactory.CreateClient("SkilledApi");
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await client.GetAsync($"api/bookings?status={statusFilter}");
+            if (response.IsSuccessStatusCode)
+            {
+                var bookings = await response.Content.ReadFromJsonAsync<List<BookingApiDto>>()
+                               ?? new List<BookingApiDto>();
+
+                Bookings.Clear();
+                foreach (var b in bookings)
+                {
+                    Bookings.Add(new BookingDisplayItem
+                    {
+                        Id = b.Id,
+                        ProviderName = b.ProviderName,
+                        ServiceName = b.ServiceName,
+                        Date = b.Date,
+                        TotalAmount = b.TotalAmount,
+                        Status = b.Status
+                    });
+                }
+            }
+            IsEmpty = !Bookings.Any();
         }
         catch (Exception ex)
         {
-            // Load mock data if API fails
-            LoadMockBookings();
+            _logger.LogError(ex, "Error loading bookings");
+            await Shell.Current.DisplayAlert("Error", "Failed to load bookings.", "OK");
+            IsEmpty = true;
         }
         finally
         {
@@ -62,43 +112,31 @@ public partial class BookingsViewModel : ObservableObject
         IsPastSelected = true;
         await LoadBookingsAsync();
     }
+}
 
-    private void LoadMockBookings()
-    {
-        Bookings.Clear();
-        var mockBookings = new[]
-        {
-            new Booking
-            {
-                Id = Guid.NewGuid(),
-                UserId = Guid.NewGuid(),
-                ProviderId = Guid.NewGuid(),
-                ServiceId = Guid.NewGuid(),
-                TotalAmount = 150.00m,
-                Status = BookingStatus.Confirmed,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Booking
-            {
-                Id = Guid.NewGuid(),
-                UserId = Guid.NewGuid(),
-                ProviderId = Guid.NewGuid(),
-                ServiceId = Guid.NewGuid(),
-                TotalAmount = 200.00m,
-                Status = BookingStatus.Completed,
-                CreatedAt = DateTime.UtcNow.AddDays(-3)
-            }
-        };
+// Lightweight display model for the bookings list
+public class BookingDisplayItem
+{
+    public Guid Id { get; set; }
+    public string ProviderName { get; set; } = string.Empty;
+    public string ServiceName { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
+    public decimal TotalAmount { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
 
-        var filteredBookings = IsUpcomingSelected 
-            ? mockBookings.Where(b => b.Status == BookingStatus.Confirmed).ToList()
-            : mockBookings.Where(b => b.Status == BookingStatus.Completed).ToList();
-
-        foreach (var booking in filteredBookings)
-        {
-            Bookings.Add(booking);
-        }
-
-        IsEmpty = !Bookings.Any();
-    }
-} 
+// Matches the API BookingDto shape
+public class BookingApiDto
+{
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public Guid ProviderId { get; set; }
+    public string ProviderName { get; set; } = string.Empty;
+    public Guid ServiceId { get; set; }
+    public string ServiceName { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
+    public string Notes { get; set; } = string.Empty;
+    public decimal TotalAmount { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+}

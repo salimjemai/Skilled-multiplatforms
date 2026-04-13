@@ -1,9 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using Skilled.Views;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Skilled.Data;
 using Skilled.Services;
 using Skilled.ViewModels;
-using Skilled.Data;
+using Skilled.Views;
 
 namespace Skilled;
 
@@ -12,6 +13,7 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
+
         builder
             .UseMauiApp<App>()
             .ConfigureFonts(fonts =>
@@ -20,36 +22,58 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Add Entity Framework with PostgreSQL
-        builder.Services.AddDbContext<SkilledDbContext>(options =>
+        // ── Configuration ──────────────────────────────────────────────────
+        // Prefer bundled appsettings, but don't crash the app if it is absent.
+        try
         {
-            var connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"];
-            options.UseNpgsql(connectionString);
-        });
+            using var stream = FileSystem.OpenAppPackageFileAsync("appsettings.json").GetAwaiter().GetResult();
+            var config = new ConfigurationBuilder()
+                .AddJsonStream(stream)
+                .Build();
+            builder.Configuration.AddConfiguration(config);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[MauiProgram] appsettings.json unavailable: {ex.Message}");
+        }
 
-        // Add HttpClient
+        // ── Database (optional — app can work API-only without local DB) ───
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            builder.Services.AddDbContext<SkilledDbContext>(options =>
+                options.UseNpgsql(connectionString),
+                ServiceLifetime.Scoped);
+        }
+
+        // ── HTTP Client ───────────────────────────────────────────────────
+        var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"]
+                         ?? "http://localhost:5000/api";
+
         builder.Services.AddHttpClient("SkilledApi", client =>
         {
-            client.BaseAddress = new Uri("https://skilled-api.yourdomain.com/api/");
+            // BaseAddress set to root so services can build full URLs from config
+            client.BaseAddress = new Uri(apiBaseUrl.Replace("/api", "/"));
             client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.Timeout = TimeSpan.FromSeconds(30);
         });
 
-        // Register services
-        builder.Services.AddSingleton<IAuthService, AuthService>();
-        builder.Services.AddSingleton<IUserService, UserService>();
-        builder.Services.AddSingleton<ITradeServiceService, TradeServiceService>();
+        // ── Services (Scoped — safe with DbContext lifetime) ───────────────
+        builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<ITradeServiceService, TradeServiceService>();
         builder.Services.AddSingleton<IPreferenceService, PreferenceService>();
 
-        // Register view models
+        // ── ViewModels ─────────────────────────────────────────────────────
         builder.Services.AddTransient<LoginPageViewModel>();
         builder.Services.AddTransient<RegisterPageViewModel>();
+        builder.Services.AddTransient<RegisterViewModel>();
         builder.Services.AddTransient<HomeViewModel>();
         builder.Services.AddTransient<MessagesViewModel>();
         builder.Services.AddTransient<BookingsViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
-        builder.Services.AddTransient<RegisterViewModel>();
 
-        // Register views
+        // ── Views (Pages) ──────────────────────────────────────────────────
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<RegisterPage>();
         builder.Services.AddTransient<HomePage>();
@@ -65,6 +89,29 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+        var app = builder.Build();
+
+        // ── Initialize the database on first launch ──────────────────────
+        InitializeDatabaseAsync(app.Services).GetAwaiter().GetResult();
+
+        return app;
+    }
+
+    private static async Task InitializeDatabaseAsync(IServiceProvider services)
+    {
+        try
+        {
+            using var scope = services.CreateScope();
+            var db = scope.ServiceProvider.GetService<SkilledDbContext>();
+            if (db != null)
+            {
+                await db.Database.MigrateAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Database unavailable is non-fatal — app works in API-only mode
+            Console.WriteLine($"[MauiProgram] DB init skipped: {ex.Message}");
+        }
     }
 }

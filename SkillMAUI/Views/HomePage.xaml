@@ -24,7 +24,7 @@
             <!-- Search Bar -->
             <Frame Padding="15" BackgroundColor="LightGray" CornerRadius="10">
                 <HorizontalStackLayout Spacing="10">
-                    <Image Source="search.png" HeightRequest="20" WidthRequest="20" />
+                    <Label Text="Search" FontSize="12" TextColor="Gray" VerticalOptions="Center" />
                     <Entry 
                         Placeholder="Plumbing, electrical, carpentry..."
                         HorizontalOptions="FillAndExpand"
@@ -79,8 +79,8 @@
                             <Frame Padding="15" BackgroundColor="White" CornerRadius="10" 
                                    HasShadow="True" Margin="0,0,0,10">
                                 <Grid ColumnDefinitions="Auto,*,Auto">
-                                    <Image Grid.Column="0" Source="{Binding ProfileImage}" 
-                                           HeightRequest="60" WidthRequest="60" 
+                                    <Image Grid.Column="0" Source="{Binding ProfileImageUrl}"
+                                           HeightRequest="60" WidthRequest="60"
                                            Aspect="AspectFill" />
                                     
                                     <VerticalStackLayout Grid.Column="1" Spacing="5" Margin="15,0">

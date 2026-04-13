@@ -8,7 +8,7 @@ using Skilled.Data;
 
 #nullable disable
 
-namespace Skilled.Migrations
+namespace Skilled.Data.Migrations
 {
     [DbContext(typeof(SkilledDbContext))]
     partial class SkilledDbContextModelSnapshot : ModelSnapshot
@@ -18,7 +18,7 @@ namespace Skilled.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("skilled_db")
-                .HasAnnotation("ProductVersion", "9.0.6")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -35,6 +35,11 @@ namespace Skilled.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<Guid>("ProviderId")
                         .HasColumnType("uuid");
 
@@ -43,10 +48,14 @@ namespace Skilled.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -73,8 +82,15 @@ namespace Skilled.Migrations
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("MessageType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uuid");
@@ -113,13 +129,13 @@ namespace Skilled.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid>("OtherUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ProfileImage")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<int>("UnreadCount")
                         .HasColumnType("integer");
@@ -129,9 +145,36 @@ namespace Skilled.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OtherUserId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("ChatPreviews", "skilled_db");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.CostRange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Maximum")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Minimum")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("ServicePricingId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServicePricingId")
+                        .IsUnique();
+
+                    b.ToTable("CostRanges", "skilled_db");
                 });
 
             modelBuilder.Entity("Skilled.Data.Models.Location", b =>
@@ -154,6 +197,12 @@ namespace Skilled.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("State")
                         .IsRequired()
@@ -179,21 +228,47 @@ namespace Skilled.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<Guid?>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<Guid>("ProviderId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal>("RefundAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BookingId")
+                        .IsUnique();
 
                     b.HasIndex("ProviderId");
 
@@ -208,12 +283,18 @@ namespace Skilled.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("BookingId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Comment")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("ProviderUserId")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ProviderId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Rating")
@@ -222,12 +303,17 @@ namespace Skilled.Migrations
                     b.Property<Guid>("ServiceId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProviderUserId");
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("ProviderId");
 
                     b.HasIndex("ServiceId");
 
@@ -236,20 +322,73 @@ namespace Skilled.Migrations
                     b.ToTable("Reviews", "skilled_db");
                 });
 
+            modelBuilder.Entity("Skilled.Data.Models.ServicePricing", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BasePrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("HourlyRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("MinimumFee")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("PricingType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TradeServiceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TradeServiceId")
+                        .IsUnique();
+
+                    b.ToTable("ServicePricings", "skilled_db");
+                });
+
             modelBuilder.Entity("Skilled.Data.Models.ServiceProvider", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<decimal>("AverageRating")
+                        .HasColumnType("decimal(3,2)");
+
+                    b.Property<string>("BusinessName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("InsuranceVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -261,9 +400,28 @@ namespace Skilled.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("ProfileImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("TotalReviews")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("YearsOfExperience")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("UserId")
                         .IsUnique();
 
                     b.ToTable("ServiceProviders", "skilled_db");
@@ -284,6 +442,9 @@ namespace Skilled.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -306,25 +467,31 @@ namespace Skilled.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<string>("Pricing")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<Guid>("ProviderId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("ProviderId");
 
@@ -337,6 +504,14 @@ namespace Skilled.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Bio")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -347,6 +522,9 @@ namespace Skilled.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -356,13 +534,23 @@ namespace Skilled.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("ProfileImageUrl")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -374,92 +562,241 @@ namespace Skilled.Migrations
 
             modelBuilder.Entity("Skilled.Data.Models.Booking", b =>
                 {
-                    b.HasOne("Skilled.Data.Models.ServiceProvider", null)
-                        .WithMany()
+                    b.HasOne("Skilled.Data.Models.ServiceProvider", "Provider")
+                        .WithMany("Bookings")
                         .HasForeignKey("ProviderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Skilled.Data.Models.TradeService", null)
-                        .WithMany()
+                    b.HasOne("Skilled.Data.Models.TradeService", "Service")
+                        .WithMany("Bookings")
                         .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Skilled.Data.Models.User", null)
-                        .WithMany()
+                    b.HasOne("Skilled.Data.Models.User", "User")
+                        .WithMany("Bookings")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Provider");
+
+                    b.Navigation("Service");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Skilled.Data.Models.ChatMessage", b =>
                 {
-                    b.HasOne("Skilled.Data.Models.User", null)
-                        .WithMany()
+                    b.HasOne("Skilled.Data.Models.User", "Receiver")
+                        .WithMany("ReceivedMessages")
                         .HasForeignKey("ReceiverId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Skilled.Data.Models.User", null)
-                        .WithMany()
+                    b.HasOne("Skilled.Data.Models.User", "Sender")
+                        .WithMany("SentMessages")
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("Skilled.Data.Models.ChatPreview", b =>
                 {
-                    b.HasOne("Skilled.Data.Models.User", null)
+                    b.HasOne("Skilled.Data.Models.User", "OtherUser")
                         .WithMany()
+                        .HasForeignKey("OtherUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Skilled.Data.Models.User", "User")
+                        .WithMany("ChatPreviews")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("OtherUser");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.CostRange", b =>
+                {
+                    b.HasOne("Skilled.Data.Models.ServicePricing", "ServicePricing")
+                        .WithOne("EstimatedCostRange")
+                        .HasForeignKey("Skilled.Data.Models.CostRange", "ServicePricingId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("ServicePricing");
                 });
 
             modelBuilder.Entity("Skilled.Data.Models.Payment", b =>
                 {
-                    b.HasOne("Skilled.Data.Models.ServiceProvider", null)
-                        .WithMany()
+                    b.HasOne("Skilled.Data.Models.Booking", "Booking")
+                        .WithOne("Payment")
+                        .HasForeignKey("Skilled.Data.Models.Payment", "BookingId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Skilled.Data.Models.ServiceProvider", "Provider")
+                        .WithMany("Payments")
                         .HasForeignKey("ProviderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Skilled.Data.Models.User", null)
+                    b.HasOne("Skilled.Data.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("Provider");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Skilled.Data.Models.Review", b =>
                 {
-                    b.HasOne("Skilled.Data.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("ProviderUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("Skilled.Data.Models.Booking", "Booking")
+                        .WithMany("Reviews")
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Skilled.Data.Models.ServiceProvider", "Provider")
+                        .WithMany("Reviews")
+                        .HasForeignKey("ProviderId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Skilled.Data.Models.TradeService", null)
-                        .WithMany()
+                    b.HasOne("Skilled.Data.Models.TradeService", "Service")
+                        .WithMany("Reviews")
                         .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Skilled.Data.Models.User", null)
-                        .WithMany()
+                    b.HasOne("Skilled.Data.Models.User", "User")
+                        .WithMany("ReviewsWritten")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("Provider");
+
+                    b.Navigation("Service");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.ServicePricing", b =>
+                {
+                    b.HasOne("Skilled.Data.Models.TradeService", "TradeService")
+                        .WithOne("Pricing")
+                        .HasForeignKey("Skilled.Data.Models.ServicePricing", "TradeServiceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("TradeService");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.ServiceProvider", b =>
+                {
+                    b.HasOne("Skilled.Data.Models.Location", "Location")
+                        .WithMany("ServiceProviders")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Skilled.Data.Models.User", "User")
+                        .WithOne("ProviderProfile")
+                        .HasForeignKey("Skilled.Data.Models.ServiceProvider", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Location");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Skilled.Data.Models.TradeService", b =>
                 {
-                    b.HasOne("Skilled.Data.Models.ServiceProvider", null)
-                        .WithMany()
+                    b.HasOne("Skilled.Data.Models.TradeCategory", "TradeCategory")
+                        .WithMany("Services")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Skilled.Data.Models.ServiceProvider", "Provider")
+                        .WithMany("Services")
                         .HasForeignKey("ProviderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Provider");
+
+                    b.Navigation("TradeCategory");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.Booking", b =>
+                {
+                    b.Navigation("Payment");
+
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.Location", b =>
+                {
+                    b.Navigation("ServiceProviders");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.ServicePricing", b =>
+                {
+                    b.Navigation("EstimatedCostRange");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.ServiceProvider", b =>
+                {
+                    b.Navigation("Bookings");
+
+                    b.Navigation("Payments");
+
+                    b.Navigation("Reviews");
+
+                    b.Navigation("Services");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.TradeCategory", b =>
+                {
+                    b.Navigation("Services");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.TradeService", b =>
+                {
+                    b.Navigation("Bookings");
+
+                    b.Navigation("Pricing");
+
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("Skilled.Data.Models.User", b =>
+                {
+                    b.Navigation("Bookings");
+
+                    b.Navigation("ChatPreviews");
+
+                    b.Navigation("ProviderProfile");
+
+                    b.Navigation("ReceivedMessages");
+
+                    b.Navigation("ReviewsWritten");
+
+                    b.Navigation("SentMessages");
                 });
 #pragma warning restore 612, 618
         }

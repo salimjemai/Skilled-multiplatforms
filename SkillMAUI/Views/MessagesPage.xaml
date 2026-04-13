@@ -4,43 +4,19 @@
              x:Class="Skilled.Views.MessagesPage"
              Title="Messages">
 
-    <Grid RowDefinitions="Auto,*">
-        
-        <!-- Service Providers Section -->
-        <VerticalStackLayout Grid.Row="0" Padding="15,10" Spacing="10">
-            <Label 
-                Text="Service Providers"
-                FontSize="16"
-                FontAttributes="Bold" />
-            
-            <CollectionView x:Name="ProvidersCollectionView" 
-                           ItemsSource="{Binding ServiceProviders}"
-                           SelectionMode="Single"
-                           SelectionChanged="OnProviderSelected">
-                <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="10" />
-                </CollectionView.ItemsLayout>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Frame WidthRequest="80" HeightRequest="90" 
-                               BackgroundColor="LightGray" CornerRadius="10" Padding="5">
-                            <VerticalStackLayout Spacing="5" HorizontalOptions="Center">
-                                <Image Source="{Binding ProfileImageUrl}" HeightRequest="50" WidthRequest="50" 
-                                       Aspect="AspectFill" />
-                                <Label Text="{Binding Name}" FontSize="10" HorizontalOptions="Center" 
-                                       MaxLines="2" LineBreakMode="TailTruncation" />
-                            </VerticalStackLayout>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </VerticalStackLayout>
+    <Grid RowDefinitions="*,Auto">
 
-        <!-- Chat Previews Section -->
-        <CollectionView Grid.Row="1" 
+        <!-- Chat Previews List -->
+        <CollectionView Grid.Row="0"
                        ItemsSource="{Binding ChatPreviews}"
                        SelectionMode="Single"
                        SelectionChanged="OnChatSelected">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="10">
+                    <Label Text="No messages yet" FontSize="18" TextColor="Gray" HorizontalOptions="Center" />
+                    <Label Text="Book a service to start chatting" FontSize="14" TextColor="LightGray" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
             <CollectionView.ItemsLayout>
                 <LinearItemsLayout Orientation="Vertical" ItemSpacing="1" />
             </CollectionView.ItemsLayout>
@@ -48,24 +24,24 @@
                 <DataTemplate>
                     <Frame Padding="15" BackgroundColor="White" Margin="0,0,0,1">
                         <Grid ColumnDefinitions="Auto,*,Auto">
-                            <Image Grid.Column="0" Source="{Binding ProfileImage}" 
-                                   HeightRequest="50" WidthRequest="50" 
+                            <Image Grid.Column="0" Source="{Binding ProfileImage}"
+                                   HeightRequest="50" WidthRequest="50"
                                    Aspect="AspectFill" />
-                            
-                            <VerticalStackLayout Grid.Column="1" Spacing="5" Margin="15,0">
+
+                            <VerticalStackLayout Grid.Column="1" Spacing="4" Margin="15,0">
                                 <Label Text="{Binding Name}" FontAttributes="Bold" />
-                                <Label Text="{Binding LastMessage}" FontSize="12" TextColor="Gray" 
+                                <Label Text="{Binding LastMessage}" FontSize="12" TextColor="Gray"
                                        MaxLines="1" LineBreakMode="TailTruncation" />
                             </VerticalStackLayout>
-                            
+
                             <VerticalStackLayout Grid.Column="2" HorizontalOptions="End" Spacing="5">
-                                <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}" 
+                                <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}"
                                        FontSize="10" TextColor="Gray" />
-                                <Frame BackgroundColor="Red" CornerRadius="10" 
+                                <Frame BackgroundColor="Red" CornerRadius="10"
                                        IsVisible="{Binding HasUnreadMessages}"
-                                       WidthRequest="20" HeightRequest="20">
-                                    <Label Text="{Binding UnreadCount}" FontSize="10" 
-                                           TextColor="White" HorizontalOptions="Center" 
+                                       WidthRequest="20" HeightRequest="20" Padding="0">
+                                    <Label Text="{Binding UnreadCount}" FontSize="10"
+                                           TextColor="White" HorizontalOptions="Center"
                                            VerticalOptions="Center" />
                                 </Frame>
                             </VerticalStackLayout>
@@ -76,7 +52,7 @@
         </CollectionView>
 
         <!-- Loading Indicator -->
-        <ActivityIndicator Grid.Row="1" 
+        <ActivityIndicator Grid.Row="0"
                           IsRunning="{Binding IsLoading}"
                           IsVisible="{Binding IsLoading}"
                           HorizontalOptions="Center"
@@ -84,4 +60,4 @@
 
     </Grid>
 
-</ContentPage> 
+</ContentPage>

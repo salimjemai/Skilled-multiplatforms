@@ -5,24 +5,15 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
-        MainPage = new AppShell();
-    }
-    
-    protected override void OnStart()
-    {
-        // Handle when your app starts
-        base.OnStart();
     }
 
-    protected override void OnSleep()
+    protected override Window CreateWindow(IActivationState? activationState)
     {
-        // Handle when your app sleeps
-        base.OnSleep();
-    }
-
-    protected override void OnResume()
-    {
-        // Handle when your app resumes
-        base.OnResume();
+        return new Window(new AppShell())
+        {
+            Title = "Skilled",
+            Width = 1280,
+            Height = 800
+        };
     }
 }

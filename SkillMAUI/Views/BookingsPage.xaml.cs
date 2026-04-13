@@ -1,16 +1,19 @@
-using Skilled.Data.Models;
 using Skilled.ViewModels;
 
 namespace Skilled.Views;
 
 public partial class BookingsPage : ContentPage
 {
-    private BookingsViewModel _viewModel;
+    private readonly BookingsViewModel _viewModel;
 
-    public BookingsPage()
+    public BookingsPage() : this(ServiceHelper.GetRequiredService<BookingsViewModel>())
+    {
+    }
+
+    public BookingsPage(BookingsViewModel viewModel)
     {
         InitializeComponent();
-        _viewModel = new BookingsViewModel();
+        _viewModel = viewModel;
         BindingContext = _viewModel;
     }
 
@@ -19,13 +22,4 @@ public partial class BookingsPage : ContentPage
         base.OnAppearing();
         await _viewModel.LoadBookingsAsync();
     }
-
-    private async void OnBookingSelected(object sender, SelectionChangedEventArgs e)
-    {
-        if (e.CurrentSelection.FirstOrDefault() is Booking booking)
-        {
-            // Navigate to booking detail page
-            await Shell.Current.GoToAsync($"//BookingDetailPage?bookingId={booking.Id}");
-        }
-    }
-} 
+}
